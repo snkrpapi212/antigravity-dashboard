@@ -2,59 +2,35 @@ const { chromium } = require('playwright');
 
 (async () => {
   const browser = await chromium.launch();
-  const page = await browser.newPage();
-  
-  const consoleMessages = [];
-  page.on('console', msg => {
-    consoleMessages.push({ type: msg.type(), text: msg.text() });
-    console.log(`[BROWSER ${msg.type().toUpperCase()}] ${msg.text()}`);
-  });
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 
-  page.on('pageerror', err => {
-    console.log(`[BROWSER PAGE-ERROR] ${err.message}`);
-    process.exit(1);
+  const errors = [];
+  page.on('pageerror', e => errors.push(e.message));
+  page.on('console', m => {
+    if (m.type() === 'error') errors.push(m.text());
   });
 
   try {
     await page.goto('http://localhost:8000', { waitUntil: 'networkidle' });
-    
-    // Give Babel and React time to settle
-    await page.waitForTimeout(4000);
+    await page.waitForTimeout(1800);
 
-    // Check if the root has content
-    const content = await page.textContent('#root');
-    if (!content || content.length < 500) {
-      console.error("FAIL: Root content is too short or empty.");
-      process.exit(1);
-    }
-
-    // Check for specific Enterprise UI elements
-    const sidebar = await page.locator('nav').isVisible();
-    const kpiCards = await page.locator('.widget-card').count();
+    const title = await page.title();
+    const kpis = await page.locator('text=Revenue').count();
     const charts = await page.locator('.recharts-responsive-container').count();
+    const dateFilter = await page.locator('label:has-text("Date Range")').count();
+    const catFilter = await page.locator('label:has-text("Category")').count();
 
-    console.log(`Sidebar visible: ${sidebar}`);
-    console.log(`KPI Cards: ${kpiCards}`);
-    console.log(`Charts: ${charts}`);
+    if (!title.includes('Antigravity')) throw new Error('Title mismatch');
+    if (kpis < 1) throw new Error('KPI cards not rendered');
+    if (charts < 2) throw new Error('Expected at least 2 charts');
+    if (dateFilter < 1 || catFilter < 1) throw new Error('Filter bar missing');
+    if (errors.length) throw new Error(`Browser errors detected: ${errors.join(' | ')}`);
 
-    if (!sidebar || kpiCards < 4 || charts < 2) {
-      console.error("FAIL: Missing essential UI components.");
-      process.exit(1);
-    }
-
-    // Test Navigation
-    await page.click('text=Analytics');
-    await page.waitForTimeout(1000);
-    const isAnalyticsLoading = await page.textContent('main');
-    if (!isAnalyticsLoading.includes('Loading analytics module')) {
-        console.error("FAIL: Navigation did not trigger view change.");
-        process.exit(1);
-    }
-
-    console.log("SUCCESS: Dashboard passed automated visual and functional check.");
+    await page.screenshot({ path: '/data/workspace/antigravity-dashboard/dashboard-proof.png', fullPage: true });
+    console.log('PASS: dashboard loaded and validated');
     process.exit(0);
-  } catch (e) {
-    console.error(`TEST EXCEPTION: ${e.message}`);
+  } catch (err) {
+    console.error('FAIL:', err.message);
     process.exit(1);
   } finally {
     await browser.close();

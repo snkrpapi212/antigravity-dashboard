@@ -1,596 +1,270 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" class="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Antigravity | Enterprise Command Center</title>
-    
-    <!-- Professional Typography -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    
-    <!-- Essential CDNs -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script crossorigin src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
-    <script crossorigin src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Antigravity Dashboard</title>
 
-    <script>
-        // Protocol check for local file system
-        if (window.location.protocol === 'file:') {
-            console.warn('Antigravity Dashboard: Performance and features may be limited when running via file:// protocol. Local server recommended.');
-        }
-    </script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace'],
-                    },
-                    colors: {
-                        slate: {
-                            950: '#020617',
-                        },
-                        indigo: {
-                            500: '#6366f1',
-                            600: '#4f46e5',
-                        }
-                    },
-                    boxShadow: {
-                        'premium': '0 0 0 1px rgba(255, 255, 255, 0.05), 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-                        'glow': '0 0 20px -5px rgba(99, 102, 241, 0.3)',
-                    }
-                }
-            }
-        }
-    </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-    <style>
-        body {
-            background-color: #020617;
-            color: #f8fafc;
-            -webkit-font-smoothing: antialiased;
-        }
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script crossorigin src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+  <script crossorigin src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
 
-        /* Custom scrollbar for a pro feel */
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #334155; }
-
-        .glass {
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          colors: {
+            bg: '#0f172a',
+            panel: '#111827',
+            panel2: '#1f2937',
+            borderc: '#334155',
+            primary: '#6366f1',
+            success: '#22c55e',
+            danger: '#f43f5e',
+            warn: '#f59e0b'
+          },
+          boxShadow: {
+            glow: '0 0 0 1px rgba(99,102,241,.18), 0 12px 30px -16px rgba(99,102,241,.55)'
+          }
         }
+      }
+    }
+  </script>
 
-        .widget-card {
-            background: #0f172a;
-            border: 1px solid #1e293b;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .widget-card:hover {
-            border-color: #334155;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        }
-
-        .metric-glow {
-            filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.4));
-        }
-
-        /* Staggered entrance animation */
-        @keyframes slideInUp {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .animate-in {
-            animation: slideInUp 0.4s ease-out forwards;
-            opacity: 0;
-        }
-
-        /* Shimmer effect for loading */
-        .shimmer {
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
-        }
-    </style>
+  <style>
+    body { font-family: Inter, system-ui, sans-serif; background: #0b1220; }
+    .glass { background: rgba(17, 24, 39, .72); backdrop-filter: blur(8px); border: 1px solid rgba(148,163,184,.15); }
+    .card { background: linear-gradient(180deg, rgba(30,41,59,.76), rgba(15,23,42,.84)); border: 1px solid rgba(148,163,184,.13); }
+    .fade-up { animation: fadeUp .45s ease-out both; }
+    @keyframes fadeUp { from { opacity:0; transform: translateY(8px);} to {opacity:1; transform: translateY(0);} }
+    .spark path { fill: none; stroke-width: 2.2; }
+  </style>
 </head>
-<body class="overflow-hidden">
-    <div id="root"></div>
+<body class="text-slate-100 min-h-screen">
+  <div id="root"></div>
 
-    <script type="text/babel">
-        const { useState, useEffect, useMemo, useCallback } = React;
-        const RechartsLib = window.Recharts || {};
-        const { 
-            LineChart, Line, AreaChart, Area, BarChart, Bar, 
-            XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-            Cell, PieChart, Pie, Legend, Sector
-        } = RechartsLib;
+  <script type="text/babel">
+    const { useMemo, useState } = React;
+    const {
+      ResponsiveContainer,
+      LineChart, Line,
+      BarChart, Bar,
+      XAxis, YAxis, CartesianGrid, Tooltip,
+      Legend
+    } = window.Recharts || {};
 
-        // --- Sophisticated UI Components ---
+    const formatCurrency = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
+    const formatCompact = (n) => new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(n);
+    const formatPct = (n) => `${n > 0 ? '+' : ''}${n.toFixed(1)}%`;
 
-        const ActiveShape = (props) => {
-            const RADIAN = Math.PI / 180;
-            const { cx, cy, midAngle, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value } = props;
-            const sin = Math.sin(-RADIAN * midAngle);
-            const cos = Math.cos(-RADIAN * midAngle);
-            const sx = cx + (outerRadius + 10) * cos;
-            const sy = cy + (outerRadius + 10) * sin;
-            const mx = cx + (outerRadius + 30) * cos;
-            const my = cy + (outerRadius + 30) * sin;
-            const ex = sx + (cos >= 0 ? 1 : -1) * 22;
-            const ey = sy;
-            const textAnchor = cos >= 0 ? 'start' : 'end';
+    const days = Array.from({ length: 120 }, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - (119 - i));
+      const t = i + 1;
+      const seasonal = Math.sin(t / 8) * 1200;
+      const trend = t * 38;
+      const noise = (Math.random() - 0.5) * 1300;
+      const revenue = Math.max(3800, 12000 + trend + seasonal + noise);
+      const users = Math.max(300, 900 + t * 3 + Math.sin(t / 5) * 80 + (Math.random() - 0.5) * 60);
+      const conversion = Math.max(1.6, Math.min(7.8, 3.2 + Math.sin(t / 9) * 0.7 + (Math.random() - 0.5) * 0.35));
+      return {
+        date: d,
+        label: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        revenue: Math.round(revenue),
+        users: Math.round(users),
+        conversion: Number(conversion.toFixed(2))
+      };
+    });
 
-            return (
-                <g>
-                    <text x={cx} y={cy} dy={8} textAnchor="middle" fill={fill} className="text-lg font-bold font-sans tracking-tight">{payload.name}</text>
-                    <Sector
-                        cx={cx}
-                        cy={cy}
-                        innerRadius={innerRadius}
-                        outerRadius={outerRadius}
-                        startAngle={startAngle}
-                        endAngle={endAngle}
-                        fill={fill}
-                    />
-                    <Sector
-                        cx={cx}
-                        cy={cy}
-                        startAngle={startAngle}
-                        endAngle={endAngle}
-                        innerRadius={outerRadius + 6}
-                        outerRadius={outerRadius + 10}
-                        fill={fill}
-                    />
-                </g>
-            );
-        };
+    const categoryMultiplier = {
+      All: 1,
+      Enterprise: 1.3,
+      SMB: 1.05,
+      Consumer: 0.86
+    };
 
-        // --- Standard UI Components ---
+    function MiniSpark({ data, color = '#818cf8' }) {
+      const w = 120, h = 34;
+      const min = Math.min(...data), max = Math.max(...data);
+      const range = max - min || 1;
+      const points = data.map((v, i) => {
+        const x = (i / (data.length - 1)) * w;
+        const y = h - ((v - min) / range) * h;
+        return `${x},${y}`;
+      }).join(' ');
+      return (
+        <svg className="spark" width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
+          <path d={`M ${points.replace(/ /g, ' L ')}`} stroke={color} />
+        </svg>
+      );
+    }
 
-        const Icon = ({ name, className = "w-5 h-5" }) => {
-            const paths = {
-                dashboard: "M3 3h7v7H3V3zm11 0h7v7h-7V3zm0 11h7v7h-7v-7zm-11 0h7v7H3v-7z",
-                analytics: "M3 3v18h18V3H3zm8 14H5v-2h6v2zm4-4H5v-2h10v2zm4-4H5V7h14v2z",
-                users: "M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z",
-                settings: "M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z",
-                search: "M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z",
-                bell: "M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z",
-                refresh: "M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z",
-                chevronRight: "M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z",
-                trendUp: "M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z",
-                trendDown: "M16 18l2.29-2.29-4.88-4.88-4 4L2 7.41 3.41 6l6 6 4-4 6.3 6.29L22 12v6z",
-                more: "M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"
-            };
-            return (
-                <svg className={className} fill="currentColor" viewBox="0 0 24 24">
-                    <path d={paths[name] || ""} />
-                </svg>
-            );
-        };
-
-        const Avatar = ({ name, size = "w-8 h-8", color = "bg-indigo-600" }) => (
-            <div className={`${size} ${color} rounded-full flex items-center justify-center text-xs font-bold text-white uppercase`}>
-                {name.split(' ').map(n => n[0]).join('')}
+    function KpiCard({ title, value, delta, spark, icon, tone = 'text-primary', delay = 0 }) {
+      const up = delta >= 0;
+      return (
+        <div className="card rounded-2xl p-5 shadow-glow hover:-translate-y-0.5 transition-all duration-300 fade-up" style={{ animationDelay: `${delay}ms` }}>
+          <div className="flex items-start justify-between mb-3">
+            <div className="text-slate-400 text-sm font-medium">{title}</div>
+            <div className={`text-xs px-2 py-1 rounded-full ${up ? 'bg-emerald-500/15 text-emerald-300' : 'bg-rose-500/15 text-rose-300'}`}>
+              {up ? '▲' : '▼'} {Math.abs(delta).toFixed(1)}%
             </div>
-        );
+          </div>
+          <div className={`text-3xl font-extrabold tracking-tight ${tone}`}>{value}</div>
+          <div className="mt-3 flex items-end justify-between">
+            <MiniSpark data={spark} color={up ? '#22c55e' : '#f43f5e'} />
+            <div className="text-slate-500 text-xs">{icon}</div>
+          </div>
+        </div>
+      );
+    }
 
-        const Badge = ({ children, variant = "info" }) => {
-            const styles = {
-                success: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-                warning: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-                danger: "bg-rose-500/10 text-rose-400 border-rose-500/20",
-                info: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
-            };
-            return (
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${styles[variant]}`}>
-                    {children}
-                </span>
-            );
-        };
+    function App() {
+      const [range, setRange] = useState('30');
+      const [category, setCategory] = useState('All');
 
-        // --- Mock Data ---
-
-        const TIMESERIES_DATA = Array.from({ length: 30 }, (_, i) => ({
-            date: `2024-05-${(i + 1).toString().padStart(2, '0')}`,
-            revenue: Math.floor(Math.random() * 5000) + 12000,
-            expenses: Math.floor(Math.random() * 3000) + 8000,
-            activeUsers: Math.floor(Math.random() * 200) + 1200,
-            conversions: Math.floor(Math.random() * 50) + 100,
+      const filtered = useMemo(() => {
+        const daysBack = range === 'all' ? 120 : Number(range);
+        const slice = days.slice(-daysBack);
+        const m = categoryMultiplier[category] || 1;
+        return slice.map(r => ({
+          ...r,
+          revenue: Math.round(r.revenue * m),
+          users: Math.round(r.users * (0.9 + m * 0.12)),
+          conversion: Number(Math.min(9.9, r.conversion * (0.93 + m * 0.08)).toFixed(2))
         }));
+      }, [range, category]);
 
-        const TOP_PRODUCTS = [
-            { id: 1, name: "Quantum Pro", sales: 1240, revenue: 62000, growth: 12.5, status: "active" },
-            { id: 2, name: "Neural Link", sales: 980, revenue: 49000, growth: -2.4, status: "review" },
-            { id: 3, name: "Sky Node", sales: 850, revenue: 42500, growth: 24.1, status: "active" },
-            { id: 4, name: "Prism Core", sales: 720, revenue: 36000, growth: 8.9, status: "limited" },
-            { id: 5, name: "Echo Shell", sales: 540, revenue: 27000, growth: 5.2, status: "active" },
-        ];
+      const previousWindow = useMemo(() => {
+        const daysBack = range === 'all' ? 120 : Number(range);
+        return days.slice(-(daysBack * 2), -daysBack);
+      }, [range]);
 
-        const RECENT_ALERTS = [
-            { id: 1, type: "danger", title: "API latency spike", time: "2m ago", body: "Region us-east-1 experiencing >500ms latency" },
-            { id: 2, type: "warning", title: "High memory usage", time: "14m ago", body: "Worker node-04 reached 85% utilization" },
-            { id: 3, type: "success", title: "Deployment successful", time: "1h ago", body: "v2.4.1 rolled out to all clusters" },
-        ];
+      const agg = useMemo(() => {
+        const sumRevenue = filtered.reduce((a,b)=>a+b.revenue,0);
+        const sumUsers = filtered.reduce((a,b)=>a+b.users,0);
+        const avgConv = filtered.reduce((a,b)=>a+b.conversion,0) / filtered.length;
+        const growth = ((filtered[filtered.length-1].revenue - filtered[0].revenue) / filtered[0].revenue) * 100;
 
-        // --- Dashboard Layout Components ---
+        const prevRevenue = previousWindow.reduce((a,b)=>a+b.revenue,0) || 1;
+        const prevUsers = previousWindow.reduce((a,b)=>a+b.users,0) || 1;
+        const prevConv = previousWindow.length ? previousWindow.reduce((a,b)=>a+b.conversion,0) / previousWindow.length : 1;
+        const prevGrowth = previousWindow.length > 1 ? ((previousWindow[previousWindow.length-1].revenue - previousWindow[0].revenue) / previousWindow[0].revenue) * 100 : growth;
 
-        const Sidebar = ({ currentView, setView }) => {
-            const navItems = [
-                { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
-                { id: 'analytics', label: 'Analytics', icon: 'analytics' },
-                { id: 'users', label: 'Customers', icon: 'users' },
-                { id: 'settings', label: 'Settings', icon: 'settings' },
-            ];
+        return {
+          revenue: { value: sumRevenue, delta: ((sumRevenue - prevRevenue) / prevRevenue) * 100, spark: filtered.slice(-18).map(x=>x.revenue) },
+          users: { value: sumUsers, delta: ((sumUsers - prevUsers) / prevUsers) * 100, spark: filtered.slice(-18).map(x=>x.users) },
+          conversion: { value: avgConv, delta: ((avgConv - prevConv) / prevConv) * 100, spark: filtered.slice(-18).map(x=>x.conversion) },
+          growth: { value: growth, delta: growth - prevGrowth, spark: filtered.slice(-18).map((x, i, arr)=> i===0 ? 0 : ((x.revenue-arr[i-1].revenue)/arr[i-1].revenue)*100) }
+        }
+      }, [filtered, previousWindow]);
 
-            return (
-                <div className="w-64 border-r border-slate-800 flex flex-col h-full bg-slate-950/50 backdrop-blur-xl">
-                    <div className="p-6 flex items-center gap-3">
-                        <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-glow">
-                            <span className="font-bold text-white tracking-tighter italic">AG</span>
-                        </div>
-                        <span className="font-bold text-lg tracking-tight">Antigravity</span>
-                    </div>
+      const bars = useMemo(() => {
+        const chunks = [];
+        const size = Math.max(3, Math.floor(filtered.length / 8));
+        for (let i=0; i<filtered.length; i+=size) {
+          const block = filtered.slice(i, i+size);
+          const label = block[Math.floor(block.length/2)]?.label || '';
+          chunks.push({
+            label,
+            users: Math.round(block.reduce((a,b)=>a+b.users,0) / block.length),
+            conversion: Number((block.reduce((a,b)=>a+b.conversion,0) / block.length).toFixed(2))
+          });
+        }
+        return chunks;
+      }, [filtered]);
 
-                    <nav className="flex-1 px-4 py-4 space-y-1">
-                        {navItems.map(item => (
-                            <button
-                                key={item.id}
-                                onClick={() => setView(item.id)}
-                                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                                    currentView === item.id 
-                                    ? 'bg-indigo-600/10 text-indigo-400 shadow-premium' 
-                                    : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50'
-                                }`}
-                            >
-                                <Icon name={item.icon} className="w-4 h-4" />
-                                {item.label}
-                            </button>
-                        ))}
-                    </nav>
+      if (!window.Recharts || !LineChart) {
+        return <div className="min-h-screen grid place-items-center p-6 text-center text-slate-300">Unable to load chart libraries. Run with internet access and open via local server.</div>;
+      }
 
-                    <div className="p-4 border-t border-slate-800">
-                        <div className="p-3 bg-slate-900/50 rounded-xl border border-slate-800/50">
-                            <div className="flex items-center gap-3">
-                                <Avatar name="Admin User" size="w-8 h-8" />
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-semibold truncate">System Architect</p>
-                                    <p className="text-[10px] text-slate-500 truncate">v2.4.1-stable</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            );
-        };
+      return (
+        <div className="max-w-7xl mx-auto p-5 md:p-8 space-y-6">
+          <header className="glass rounded-2xl p-5 md:p-6 fade-up">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+              <div>
+                <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Antigravity Dashboard</h1>
+                <p className="text-slate-400 mt-1">Executive metrics, trends, and conversion performance.</p>
+              </div>
 
-        const Header = () => (
-            <header className="h-16 border-b border-slate-800 flex items-center justify-between px-8 bg-slate-950/20 backdrop-blur-md">
-                <div className="flex items-center gap-4">
-                    <div className="relative group">
-                        <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                        <input 
-                            type="text" 
-                            placeholder="Search metrics, reports, users..." 
-                            className="bg-slate-900/50 border border-slate-800 rounded-lg pl-10 pr-4 py-1.5 text-sm w-80 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/50 transition-all"
-                        />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-600 font-mono pointer-events-none group-focus-within:hidden">⌘K</span>
-                    </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="glass rounded-xl px-3 py-2">
+                  <label className="text-xs text-slate-400 mr-2">Date Range</label>
+                  <select value={range} onChange={(e)=>setRange(e.target.value)} className="bg-transparent text-sm outline-none">
+                    <option value="7" className="text-black">Last 7 days</option>
+                    <option value="30" className="text-black">Last 30 days</option>
+                    <option value="90" className="text-black">Last 90 days</option>
+                    <option value="all" className="text-black">All data</option>
+                  </select>
                 </div>
 
-                <div className="flex items-center gap-4">
-                    <button className="p-2 text-slate-400 hover:text-indigo-400 hover:bg-slate-800 rounded-full transition-colors relative">
-                        <Icon name="bell" className="w-5 h-5" />
-                        <span className="absolute top-2 right-2 w-2 h-2 bg-indigo-500 rounded-full border-2 border-slate-950"></span>
-                    </button>
-                    <div className="h-6 w-px bg-slate-800 mx-2"></div>
-                    <button className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow-premium transition-all active:scale-95">
-                        <Icon name="dashboard" className="w-3.5 h-3.5" />
-                        Create Report
-                    </button>
+                <div className="glass rounded-xl px-3 py-2">
+                  <label className="text-xs text-slate-400 mr-2">Category</label>
+                  <select value={category} onChange={(e)=>setCategory(e.target.value)} className="bg-transparent text-sm outline-none">
+                    <option value="All" className="text-black">All</option>
+                    <option value="Enterprise" className="text-black">Enterprise</option>
+                    <option value="SMB" className="text-black">SMB</option>
+                    <option value="Consumer" className="text-black">Consumer</option>
+                  </select>
                 </div>
-            </header>
-        );
-
-        // --- Widget Components ---
-
-        const KPICard = ({ title, value, change, trend, icon, delay = 0 }) => {
-            const isUp = trend === 'up';
-            return (
-                <div className={`widget-card p-5 rounded-2xl animate-in`} style={{ animationDelay: `${delay}ms` }}>
-                    <div className="flex justify-between items-start mb-4">
-                        <div className="p-2 bg-indigo-600/10 rounded-lg text-indigo-400 border border-indigo-600/20">
-                            <Icon name={icon} className="w-4 h-4" />
-                        </div>
-                        <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold ${
-                            isUp ? 'text-emerald-400 bg-emerald-400/10 border border-emerald-400/20' : 'text-rose-400 bg-rose-400/10 border border-rose-400/20'
-                        }`}>
-                            <Icon name={isUp ? 'trendUp' : 'trendDown'} className="w-3 h-3" />
-                            {change}
-                        </div>
-                    </div>
-                    <h3 className="text-slate-400 text-xs font-medium mb-1 tracking-wide uppercase">{title}</h3>
-                    <div className="flex items-baseline gap-2">
-                        <span className="text-2xl font-bold tracking-tight text-white metric-glow">{value}</span>
-                        <span className="text-[10px] text-slate-500 font-medium">vs prev 30d</span>
-                    </div>
-                    <div className="mt-4 h-1 w-full bg-slate-800 rounded-full overflow-hidden">
-                        <div className={`h-full ${isUp ? 'bg-indigo-500' : 'bg-rose-500'} transition-all duration-1000`} style={{ width: '65%' }}></div>
-                    </div>
-                </div>
-            );
-        };
-
-        const ChartWidget = ({ title, type, delay = 0, className = "" }) => (
-            <div className={`widget-card rounded-2xl flex flex-col animate-in ${className}`} style={{ animationDelay: `${delay}ms` }}>
-                <div className="p-5 border-b border-slate-800 flex justify-between items-center">
-                    <h3 className="text-sm font-semibold tracking-tight text-slate-200">{title}</h3>
-                    <div className="flex gap-2">
-                        <button className="p-1 text-slate-500 hover:text-slate-300 transition-colors"><Icon name="refresh" className="w-3.5 h-3.5" /></button>
-                        <button className="p-1 text-slate-500 hover:text-slate-300 transition-colors"><Icon name="more" className="w-3.5 h-3.5" /></button>
-                    </div>
-                </div>
-                <div className="p-5 flex-1 min-h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                        {type === 'area' ? (
-                            <AreaChart data={TIMESERIES_DATA}>
-                                <defs>
-                                    <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
-                                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1e293b" />
-                                <XAxis dataKey="date" hide />
-                                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#64748b'}} />
-                                <Tooltip 
-                                    contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', color: '#f8fafc', fontSize: '12px' }}
-                                    itemStyle={{ padding: '0' }}
-                                />
-                                <Area type="monotone" dataKey="revenue" stroke="#6366f1" strokeWidth={2} fillOpacity={1} fill="url(#colorRev)" />
-                            </AreaChart>
-                        ) : (
-                            <BarChart data={TOP_PRODUCTS}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1e293b" />
-                                <XAxis dataKey="name" hide />
-                                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#64748b'}} />
-                                <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '8px' }} />
-                                <Bar dataKey="sales" fill="#6366f1" radius={[4, 4, 0, 0]}>
-                                    {TOP_PRODUCTS.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={index === 0 ? '#818cf8' : '#334155'} />
-                                    ))}
-                                </Bar>
-                            </BarChart>
-                        )}
-                    </ResponsiveContainer>
-                </div>
+              </div>
             </div>
-        );
+          </header>
 
-        const ActivityFeed = ({ delay = 0 }) => (
-            <div className="widget-card rounded-2xl animate-in" style={{ animationDelay: `${delay}ms` }}>
-                <div className="p-5 border-b border-slate-800 flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-slate-200">System Monitoring</h3>
-                    <div className="flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Live</span>
-                    </div>
-                </div>
-                <div className="p-5 space-y-6">
-                    {RECENT_ALERTS.map(alert => (
-                        <div key={alert.id} className="flex gap-4 group">
-                            <div className={`mt-1 w-2 h-2 rounded-full shrink-0 transition-all group-hover:scale-125 ${
-                                alert.type === 'danger' ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]' :
-                                alert.type === 'warning' ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]' : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]'
-                            }`}></div>
-                            <div className="flex-1 space-y-1">
-                                <div className="flex justify-between items-center">
-                                    <p className="text-xs font-semibold text-slate-200 group-hover:text-indigo-400 transition-colors">{alert.title}</p>
-                                    <span className="text-[10px] text-slate-500 font-mono">{alert.time}</span>
-                                </div>
-                                <p className="text-[11px] text-slate-400 leading-relaxed">{alert.body}</p>
-                            </div>
-                        </div>
-                    ))}
-                    <button className="w-full py-2 bg-slate-900 border border-slate-800 rounded-lg text-[10px] font-bold text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-all tracking-widest">
-                        OPEN CLUSTER CONSOLE
-                    </button>
-                </div>
+          <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-5">
+            <KpiCard title="Revenue" value={formatCurrency(agg.revenue.value)} delta={agg.revenue.delta} spark={agg.revenue.spark} icon="Revenue" tone="text-indigo-300" delay={60} />
+            <KpiCard title="Users" value={formatCompact(agg.users.value)} delta={agg.users.delta} spark={agg.users.spark} icon="Users" tone="text-cyan-300" delay={110} />
+            <KpiCard title="Conversion" value={`${agg.conversion.value.toFixed(2)}%`} delta={agg.conversion.delta} spark={agg.conversion.spark} icon="CVR" tone="text-emerald-300" delay={160} />
+            <KpiCard title="Growth" value={formatPct(agg.growth.value)} delta={agg.growth.delta} spark={agg.growth.spark} icon="Growth" tone="text-amber-300" delay={210} />
+          </section>
+
+          <section className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+            <div className="card rounded-2xl p-5 md:p-6 fade-up" style={{ animationDelay: '250ms' }}>
+              <h2 className="text-lg font-semibold mb-4">Revenue Trend (Line)</h2>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={filtered}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                    <XAxis dataKey="label" tick={{ fill: '#94a3b8', fontSize: 11 }} minTickGap={24} />
+                    <YAxis tick={{ fill: '#94a3b8', fontSize: 11 }} tickFormatter={(v)=>`$${Math.round(v/1000)}k`} />
+                    <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '10px' }} formatter={(v)=>formatCurrency(v)} />
+                    <Line type="monotone" dataKey="revenue" stroke="#818cf8" strokeWidth={3} dot={false} activeDot={{ r: 5 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             </div>
-        );
 
-        const MarketShareChart = ({ delay = 0 }) => {
-            const [activeIndex, setActiveIndex] = useState(0);
-            const data = [
-                { name: 'Direct', value: 400, color: '#6366f1' },
-                { name: 'Social', value: 300, color: '#a78bfa' },
-                { name: 'Referral', value: 300, color: '#f472b6' },
-                { name: 'Search', value: 200, color: '#fbbf24' },
-            ];
-
-            const onPieEnter = (_, index) => setActiveIndex(index);
-
-            return (
-                <div className="widget-card rounded-2xl animate-in flex flex-col" style={{ animationDelay: `${delay}ms` }}>
-                    <div className="p-5 border-b border-slate-800">
-                        <h3 className="text-sm font-semibold text-slate-200">Traffic Distribution</h3>
-                    </div>
-                    <div className="p-5 flex-1 min-h-[300px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie
-                                    activeIndex={activeIndex}
-                                    activeShape={ActiveShape}
-                                    data={data}
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={60}
-                                    outerRadius={80}
-                                    fill="#8884d8"
-                                    dataKey="value"
-                                    onMouseEnter={onPieEnter}
-                                >
-                                    {data.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.color} />
-                                    ))}
-                                </Pie>
-                            </PieChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-            );
-        };
-
-        const ProductGrid = ({ delay = 0 }) => (
-            <div className="widget-card rounded-2xl animate-in overflow-hidden" style={{ animationDelay: `${delay}ms` }}>
-                <div className="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-900/20">
-                    <h3 className="text-sm font-semibold text-slate-200">Active Strategic Initiatives</h3>
-                    <Badge variant="info">5 Total</Badge>
-                </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs">
-                        <thead>
-                            <tr className="border-b border-slate-800 text-slate-500 font-medium tracking-wide uppercase">
-                                <th className="px-6 py-4 font-semibold">Initiative</th>
-                                <th className="px-6 py-4 font-semibold">Performance</th>
-                                <th className="px-6 py-4 font-semibold">Status</th>
-                                <th className="px-6 py-4 font-semibold text-right">Revenue YTD</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-800/50">
-                            {TOP_PRODUCTS.map(product => (
-                                <tr key={product.id} className="hover:bg-slate-800/30 transition-colors">
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded bg-slate-800 flex items-center justify-center font-mono font-bold text-indigo-400">
-                                                {product.name[0]}
-                                            </div>
-                                            <span className="font-semibold text-slate-200">{product.name}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-24 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                                                <div 
-                                                    className={`h-full ${product.growth > 10 ? 'bg-emerald-500' : product.growth > 0 ? 'bg-indigo-500' : 'bg-rose-500'}`} 
-                                                    style={{ width: `${Math.abs(product.growth * 3)}%` }}
-                                                ></div>
-                                            </div>
-                                            <span className={`font-mono font-bold ${product.growth > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                                {product.growth > 0 ? '+' : ''}{product.growth}%
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 uppercase">
-                                        <Badge variant={product.status === 'active' ? 'success' : product.status === 'review' ? 'warning' : 'danger'}>
-                                            {product.status}
-                                        </Badge>
-                                    </td>
-                                    <td className="px-6 py-4 text-right font-mono font-bold text-slate-300">
-                                        ${(product.revenue / 1000).toFixed(1)}K
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+            <div className="card rounded-2xl p-5 md:p-6 fade-up" style={{ animationDelay: '300ms' }}>
+              <h2 className="text-lg font-semibold mb-4">Users vs Conversion (Bar)</h2>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={bars}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                    <XAxis dataKey="label" tick={{ fill: '#94a3b8', fontSize: 11 }} />
+                    <YAxis yAxisId="left" tick={{ fill: '#94a3b8', fontSize: 11 }} />
+                    <YAxis yAxisId="right" orientation="right" tick={{ fill: '#94a3b8', fontSize: 11 }} tickFormatter={(v)=>`${v}%`} />
+                    <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '10px' }} />
+                    <Legend wrapperStyle={{ color: '#cbd5e1' }} />
+                    <Bar yAxisId="left" dataKey="users" fill="#60a5fa" radius={[8,8,0,0]} />
+                    <Bar yAxisId="right" dataKey="conversion" fill="#f472b6" radius={[8,8,0,0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
-        );
+          </section>
+        </div>
+      );
+    }
 
-        // --- Main App ---
-
-        const DashboardView = () => {
-            return (
-                <div className="p-8 space-y-8 max-w-[1600px] mx-auto overflow-y-auto h-full">
-                    {/* Welcome Header */}
-                    <div className="flex justify-between items-end animate-in">
-                        <div>
-                            <h2 className="text-3xl font-bold tracking-tight mb-2">Executive Summary</h2>
-                            <div className="flex items-center gap-2 text-slate-500 text-sm">
-                                <span>Operations Overview</span>
-                                <Icon name="chevronRight" className="w-3 h-3" />
-                                <span className="text-slate-300">Quarterly Performance</span>
-                            </div>
-                        </div>
-                        <div className="flex gap-3">
-                            <button className="px-4 py-2 border border-slate-800 rounded-lg text-sm font-semibold hover:bg-slate-800 transition-all">
-                                12 May 2024 - 11 Jun 2024
-                            </button>
-                            <button className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-semibold transition-all">
-                                Filters
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* KPI Section */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <KPICard title="Total Net Revenue" value="$422.5K" change="+14.2%" trend="up" icon="analytics" delay={100} />
-                        <KPICard title="Session Conversion" value="3.42%" change="-2.1%" trend="down" icon="dashboard" delay={150} />
-                        <KPICard title="Customer LTV" value="$1,240" change="+8.9%" trend="up" icon="users" delay={200} />
-                        <KPICard title="Operational Load" value="12.4ms" change="+0.4%" trend="up" icon="settings" delay={250} />
-                    </div>
-
-                    {/* Charts & Monitoring */}
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                        <ChartWidget title="Revenue Growth Forecast" type="area" delay={300} className="lg:col-span-8" />
-                        <ActivityFeed delay={350} className="lg:col-span-4" />
-                    </div>
-
-                    {/* Tables & Deep Dive */}
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pb-12">
-                        <ProductGrid delay={400} className="lg:col-span-9" />
-                        <MarketShareChart delay={450} className="lg:col-span-3" />
-                    </div>
-                </div>
-            );
-        };
-
-        const App = () => {
-            const [view, setView] = useState('dashboard');
-            
-            return (
-                <div className="flex h-screen bg-slate-950 font-sans text-slate-100">
-                    <Sidebar currentView={view} setView={setView} />
-                    
-                    <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-                        <Header />
-                        <main className="flex-1 overflow-hidden">
-                            {view === 'dashboard' ? <DashboardView /> : (
-                                <div className="h-full flex items-center justify-center text-slate-500 animate-in">
-                                    <div className="text-center">
-                                        <div className="w-12 h-12 border-2 border-slate-800 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4"></div>
-                                        <p className="text-sm font-medium">Loading {view} module...</p>
-                                    </div>
-                                </div>
-                            )}
-                        </main>
-                    </div>
-
-                    {/* Command Palette Overlay (Visual only) */}
-                    <div className="fixed inset-0 pointer-events-none z-50 flex items-start justify-center pt-[15vh]">
-                        {/* Hidden by default, triggered by CMD+K logic (not implemented but visual cues present) */}
-                    </div>
-                </div>
-            );
-        };
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
 </body>
 </html>
