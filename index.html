@@ -1,465 +1,503 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Antigravity Dashboard v1.1</title>
+    <title>Antigravity | Enterprise Command Center</title>
     
-    <!-- Styles -->
+    <!-- Professional Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Essential CDNs -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Core React Libraries -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    
-    <!-- Babel for JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <!-- Visualization Libraries -->
-    <!-- Prop-types is often a peer dependency for UMD builds -->
     <script crossorigin src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
     <script crossorigin src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
 
-    <style>
-        body { 
-            background-color: #0f172a; 
-            color: #f8fafc; 
-            font-family: 'Inter', sans-serif; 
-            overflow-x: hidden;
-        }
-        .glass-card {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(148, 163, 184, 0.1);
-            border-radius: 1rem;
-            transition: all 0.3s ease;
-        }
-        .glass-card:hover {
-            border-color: rgba(148, 163, 184, 0.2);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            transform: translateY(-2px);
-        }
-        .gradient-text {
-            background: linear-gradient(to right, #818cf8, #c084fc);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #0f172a;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #475569;
-        }
-        .animate-fade-in {
-            animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        #loading-overlay {
-            position: fixed;
-            inset: 0;
-            background: #0f172a;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 50;
-            transition: opacity 0.5s ease;
-        }
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid rgba(99, 102, 241, 0.1);
-            border-left-color: #6366f1;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-    </style>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
-                    colors: {
-                        dark: '#0f172a',
-                        card: '#1e293b',
-                        primary: '#6366f1',
-                        secondary: '#ec4899',
-                        success: '#10b981',
-                        warning: '#f59e0b',
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
                     },
-                    animation: {
-                        'spin-slow': 'spin 3s linear infinite',
+                    colors: {
+                        slate: {
+                            950: '#020617',
+                        },
+                        indigo: {
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                        }
+                    },
+                    boxShadow: {
+                        'premium': '0 0 0 1px rgba(255, 255, 255, 0.05), 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                        'glow': '0 0 20px -5px rgba(99, 102, 241, 0.3)',
                     }
                 }
             }
         }
     </script>
-</head>
-<body>
-    <!-- Loading Screen -->
-    <div id="loading-overlay">
-        <div class="flex flex-col items-center gap-4">
-            <div class="spinner"></div>
-            <p class="text-indigo-400 font-medium text-sm tracking-wider animate-pulse">INITIALIZING SYSTEM</p>
-        </div>
-    </div>
 
-    <!-- App Root -->
+    <style>
+        body {
+            background-color: #020617;
+            color: #f8fafc;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Custom scrollbar for a pro feel */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #334155; }
+
+        .glass {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .widget-card {
+            background: #0f172a;
+            border: 1px solid #1e293b;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .widget-card:hover {
+            border-color: #334155;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .metric-glow {
+            filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.4));
+        }
+
+        /* Staggered entrance animation */
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-in {
+            animation: slideInUp 0.4s ease-out forwards;
+            opacity: 0;
+        }
+
+        /* Shimmer effect for loading */
+        .shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+    </style>
+</head>
+<body class="overflow-hidden">
     <div id="root"></div>
 
     <script type="text/babel">
-        // --- Setup & Error Handling ---
         const { useState, useEffect, useMemo, useCallback } = React;
-        
-        // Destructure Recharts components safely
-        // Fallback to empty objects if Recharts fails to load to prevent crash
-        const RechartsLib = window.Recharts || {};
         const { 
-            LineChart, Line, BarChart, Bar, AreaChart, Area, 
-            XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-            PieChart, Pie, Cell
-        } = RechartsLib;
+            LineChart, Line, AreaChart, Area, BarChart, Bar, 
+            XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
+            Cell, PieChart, Pie, Legend
+        } = Recharts;
 
-        // Hide loader when React mounts
-        setTimeout(() => {
-            const loader = document.getElementById('loading-overlay');
-            if(loader) {
-                loader.style.opacity = '0';
-                setTimeout(() => loader.remove(), 500);
-            }
-        }, 800);
+        // --- Standard UI Components ---
 
-        // --- Icons (Lucide-style SVGs) ---
-        const Icon = ({ name, size = 20, className = "" }) => {
-            const icons = {
-                TrendingUp: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>,
-                TrendingDown: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>,
-                Users: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>,
-                DollarSign: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>,
-                Activity: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>,
-                Zap: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>,
-                Calendar: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>,
-                Filter: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>,
-                Download: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>,
-                RefreshCw: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>,
-                MoreHorizontal: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+        const Icon = ({ name, className = "w-5 h-5" }) => {
+            const paths = {
+                dashboard: "M3 3h7v7H3V3zm11 0h7v7h-7V3zm0 11h7v7h-7v-7zm-11 0h7v7H3v-7z",
+                analytics: "M3 3v18h18V3H3zm8 14H5v-2h6v2zm4-4H5v-2h10v2zm4-4H5V7h14v2z",
+                users: "M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z",
+                settings: "M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z",
+                search: "M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z",
+                bell: "M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z",
+                refresh: "M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z",
+                chevronRight: "M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z",
+                trendUp: "M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z",
+                trendDown: "M16 18l2.29-2.29-4.88-4.88-4 4L2 7.41 3.41 6l6 6 4-4 6.3 6.29L22 12v6z",
+                more: "M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"
             };
-            return icons[name] || null;
+            return (
+                <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+                    <path d={paths[name] || ""} />
+                </svg>
+            );
         };
 
-        // --- Mock Data Generator ---
-        const generateData = () => {
-            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            return months.map(month => ({
-                name: month,
-                revenue: Math.floor(Math.random() * 50000) + 20000,
-                users: Math.floor(Math.random() * 3000) + 1000,
-                conversion: Math.floor(Math.random() * 50) + 10,
-                growth: Math.floor(Math.random() * 100)
-            }));
+        const Avatar = ({ name, size = "w-8 h-8", color = "bg-indigo-600" }) => (
+            <div className={`${size} ${color} rounded-full flex items-center justify-center text-xs font-bold text-white uppercase`}>
+                {name.split(' ').map(n => n[0]).join('')}
+            </div>
+        );
+
+        const Badge = ({ children, variant = "info" }) => {
+            const styles = {
+                success: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+                warning: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+                danger: "bg-rose-500/10 text-rose-400 border-rose-500/20",
+                info: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
+            };
+            return (
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${styles[variant]}`}>
+                    {children}
+                </span>
+            );
         };
 
-        const initialKpiData = [
-            { id: 1, title: 'Total Revenue', value: '$1,245,832', change: '+15.3%', trend: 'up', icon: 'DollarSign', color: 'text-indigo-400', bg: 'bg-indigo-400' },
-            { id: 2, title: 'Active Users', value: '45,231', change: '+12.5%', trend: 'up', icon: 'Users', color: 'text-blue-400', bg: 'bg-blue-400' },
-            { id: 3, title: 'Conversion Rate', value: '3.8%', change: '-2.1%', trend: 'down', icon: 'Activity', color: 'text-rose-400', bg: 'bg-rose-400' },
-            { id: 4, title: 'Avg. Order Value', value: '$142.50', change: '+5.4%', trend: 'up', icon: 'Zap', color: 'text-amber-400', bg: 'bg-amber-400' },
+        // --- Mock Data ---
+
+        const TIMESERIES_DATA = Array.from({ length: 30 }, (_, i) => ({
+            date: `2024-05-${(i + 1).toString().padStart(2, '0')}`,
+            revenue: Math.floor(Math.random() * 5000) + 12000,
+            expenses: Math.floor(Math.random() * 3000) + 8000,
+            activeUsers: Math.floor(Math.random() * 200) + 1200,
+            conversions: Math.floor(Math.random() * 50) + 100,
+        }));
+
+        const TOP_PRODUCTS = [
+            { id: 1, name: "Quantum Pro", sales: 1240, revenue: 62000, growth: 12.5, status: "active" },
+            { id: 2, name: "Neural Link", sales: 980, revenue: 49000, growth: -2.4, status: "review" },
+            { id: 3, name: "Sky Node", sales: 850, revenue: 42500, growth: 24.1, status: "active" },
+            { id: 4, name: "Prism Core", sales: 720, revenue: 36000, growth: 8.9, status: "limited" },
+            { id: 5, name: "Echo Shell", sales: 540, revenue: 27000, growth: 5.2, status: "active" },
         ];
 
-        // --- Components ---
-        
-        const KPICard = ({ kpi, index }) => (
-            <div className="glass-card p-6 animate-fade-in hover:bg-white/5 cursor-pointer group" style={{ animationDelay: `${index * 100}ms` }}>
-                <div className="flex justify-between items-start mb-4">
-                    <div className={`p-3 rounded-xl bg-opacity-20 ${kpi.bg} transition-all group-hover:bg-opacity-30`}>
-                        <Icon name={kpi.icon} className={kpi.color} size={24} />
-                    </div>
-                    <span className={`flex items-center text-sm font-medium ${kpi.trend === 'up' ? 'text-green-400' : 'text-rose-400'} bg-white/5 px-2 py-1 rounded-full border border-white/5`}>
-                        {kpi.trend === 'up' ? <Icon name="TrendingUp" size={14} className="mr-1" /> : <Icon name="TrendingDown" size={14} className="mr-1" />}
-                        {kpi.change}
-                    </span>
-                </div>
-                <h3 className="text-gray-400 text-sm font-medium mb-1 tracking-wide uppercase text-xs">{kpi.title}</h3>
-                <p className="text-3xl font-bold text-white tracking-tight">{kpi.value}</p>
-            </div>
-        );
+        const RECENT_ALERTS = [
+            { id: 1, type: "danger", title: "API latency spike", time: "2m ago", body: "Region us-east-1 experiencing >500ms latency" },
+            { id: 2, type: "warning", title: "High memory usage", time: "14m ago", body: "Worker node-04 reached 85% utilization" },
+            { id: 3, type: "success", title: "Deployment successful", time: "1h ago", body: "v2.4.1 rolled out to all clusters" },
+        ];
 
-        const ChartCard = ({ title, children, delay, height = "400px" }) => (
-            <div className="glass-card p-6 animate-fade-in flex flex-col" style={{ animationDelay: `${delay}ms`, height }}>
-                <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-lg font-semibold text-gray-200 tracking-tight">{title}</h3>
-                    <button className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-lg">
-                        <Icon name="MoreHorizontal" size={18} />
-                    </button>
-                </div>
-                <div className="flex-1 w-full min-h-0 relative">
-                    {children ? (
-                        <ResponsiveContainer width="100%" height="100%">
-                            {children}
-                        </ResponsiveContainer>
-                    ) : (
-                        <div className="absolute inset-0 flex items-center justify-center text-gray-500">
-                            No chart data available
-                        </div>
-                    )}
-                </div>
-            </div>
-        );
+        // --- Dashboard Layout Components ---
 
-        const Dashboard = () => {
-            const [data, setData] = useState(generateData());
-            const [kpis, setKpis] = useState(initialKpiData);
-            const [loading, setLoading] = useState(false);
-            const [timeRange, setTimeRange] = useState('1y');
-
-            const refreshData = useCallback(() => {
-                setLoading(true);
-                // Simulate network latency
-                setTimeout(() => {
-                    const newData = generateData();
-                    setData(newData);
-                    
-                    // Randomize KPIs slightly
-                    setKpis(prev => prev.map(k => ({
-                        ...k,
-                        trend: Math.random() > 0.5 ? 'up' : 'down',
-                        change: (Math.random() * 20 - 5).toFixed(1) + '%'
-                    })));
-                    
-                    setLoading(false);
-                }, 800);
-            }, []);
-
-            // Handle Key Press for Refresh
-            useEffect(() => {
-                const handleKeyDown = (e) => {
-                    if (e.key === 'r' && (e.metaKey || e.ctrlKey)) {
-                        e.preventDefault();
-                        refreshData();
-                    }
-                };
-                window.addEventListener('keydown', handleKeyDown);
-                return () => window.removeEventListener('keydown', handleKeyDown);
-            }, [refreshData]);
-
-            if (!RechartsLib.LineChart) {
-                return (
-                    <div className="min-h-screen flex items-center justify-center text-center p-8">
-                        <div className="glass-card p-8 max-w-md">
-                            <h2 className="text-xl text-rose-400 mb-2">Library Error</h2>
-                            <p className="text-gray-400">Unable to load visualization libraries. Please check your internet connection and reload.</p>
-                        </div>
-                    </div>
-                );
-            }
+        const Sidebar = ({ currentView, setView }) => {
+            const navItems = [
+                { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+                { id: 'analytics', label: 'Analytics', icon: 'analytics' },
+                { id: 'users', label: 'Customers', icon: 'users' },
+                { id: 'settings', label: 'Settings', icon: 'settings' },
+            ];
 
             return (
-                <div className="min-h-screen p-6 md:p-8 lg:p-12 max-w-7xl mx-auto pb-20">
-                    {/* Header */}
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-10 gap-6 animate-fade-in">
-                        <div>
-                            <div className="flex items-center gap-3 mb-2">
-                                <div className="h-8 w-1 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full"></div>
-                                <h1 className="text-4xl font-bold tracking-tight text-white">
-                                    Antigravity<span className="text-indigo-500">.</span>
-                                </h1>
-                            </div>
-                            <p className="text-gray-400 pl-4 border-l border-gray-800 ml-1.5">Real-time business intelligence & analytics system</p>
+                <div className="w-64 border-r border-slate-800 flex flex-col h-full bg-slate-950/50 backdrop-blur-xl">
+                    <div className="p-6 flex items-center gap-3">
+                        <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-glow">
+                            <span className="font-bold text-white tracking-tighter italic">AG</span>
                         </div>
-                        
-                        <div className="flex flex-wrap items-center gap-3">
-                            <div className="glass-card flex items-center p-1 gap-1">
-                                {['1m', '3m', '6m', '1y', 'All'].map(range => (
-                                    <button 
-                                        key={range}
-                                        onClick={() => setTimeRange(range)}
-                                        className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${timeRange === range ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-                                    >
-                                        {range}
-                                    </button>
-                                ))}
-                            </div>
-                            
-                            <button 
-                                onClick={refreshData}
-                                className={`glass-card p-3 text-gray-400 hover:text-white hover:bg-white/5 transition-all active:scale-95 ${loading ? 'animate-spin text-indigo-400' : ''}`}
-                                title="Refresh Data (Ctrl+R)"
+                        <span className="font-bold text-lg tracking-tight">Antigravity</span>
+                    </div>
+
+                    <nav className="flex-1 px-4 py-4 space-y-1">
+                        {navItems.map(item => (
+                            <button
+                                key={item.id}
+                                onClick={() => setView(item.id)}
+                                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                                    currentView === item.id 
+                                    ? 'bg-indigo-600/10 text-indigo-400 shadow-premium' 
+                                    : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50'
+                                }`}
                             >
-                                <Icon name="RefreshCw" size={20} />
+                                <Icon name={item.icon} className="w-4 h-4" />
+                                {item.label}
                             </button>
-                            
-                            <button className="glass-card flex items-center gap-2 px-5 py-3 text-sm font-semibold hover:bg-indigo-600 transition-all hover:border-indigo-500 group shadow-lg shadow-transparent hover:shadow-indigo-500/20 active:scale-95">
-                                <Icon name="Download" size={18} />
-                                <span className="hidden sm:inline">Export Report</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* KPI Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                        {kpis.map((kpi, idx) => (
-                            <KPICard key={kpi.id} kpi={kpi} index={idx} />
                         ))}
-                    </div>
+                    </nav>
 
-                    {/* Charts Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-                        {/* Main Chart - Spans 2 columns */}
-                        <div className="lg:col-span-2">
-                            <ChartCard title="Revenue Performance" delay={400} height="450px">
-                                <AreaChart data={data} margin={{ top: 20, right: 10, left: 0, bottom: 0 }}>
-                                    <defs>
-                                        <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
-                                            <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
-                                        </linearGradient>
-                                    </defs>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} vertical={false} />
-                                    <XAxis 
-                                        dataKey="name" 
-                                        stroke="#94a3b8" 
-                                        tickLine={false} 
-                                        axisLine={false} 
-                                        dy={10} 
-                                        tick={{fontSize: 12}}
-                                    />
-                                    <YAxis 
-                                        stroke="#94a3b8" 
-                                        tickLine={false} 
-                                        axisLine={false} 
-                                        tickFormatter={(value) => `$${value/1000}k`} 
-                                        tick={{fontSize: 12}}
-                                    />
-                                    <Tooltip 
-                                        contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#f8fafc', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)' }}
-                                        itemStyle={{ color: '#fff' }}
-                                        formatter={(value) => [`$${value.toLocaleString()}`, 'Revenue']}
-                                        cursor={{ stroke: '#6366f1', strokeWidth: 1, strokeDasharray: '4 4' }}
-                                    />
-                                    <Area 
-                                        type="monotone" 
-                                        dataKey="revenue" 
-                                        stroke="#6366f1" 
-                                        strokeWidth={3} 
-                                        fillOpacity={1} 
-                                        fill="url(#colorRevenue)" 
-                                        activeDot={{ r: 6, strokeWidth: 0, fill: '#818cf8' }}
-                                    />
-                                </AreaChart>
-                            </ChartCard>
-                        </div>
-
-                        {/* Secondary Chart */}
-                        <div className="lg:col-span-1">
-                            <ChartCard title="Conversion Analysis" delay={500} height="450px">
-                                <BarChart data={data} margin={{ top: 20, right: 10, left: -10, bottom: 0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} vertical={false} />
-                                    <XAxis dataKey="name" stroke="#94a3b8" tickLine={false} axisLine={false} dy={10} tick={{fontSize: 12}} interval={2} />
-                                    <YAxis stroke="#94a3b8" tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} tick={{fontSize: 12}} />
-                                    <Tooltip 
-                                        cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }}
-                                        contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#f8fafc', borderRadius: '8px' }}
-                                    />
-                                    <Bar dataKey="conversion" name="Conversion %" fill="#ec4899" radius={[4, 4, 0, 0]} barSize={12}>
-                                        {data.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={`rgba(236, 72, 153, ${0.4 + (index / data.length) * 0.6})`} />
-                                        ))}
-                                    </Bar>
-                                </BarChart>
-                            </ChartCard>
-                        </div>
-                    </div>
-
-                    {/* Recent Transactions / Table */}
-                    <div className="glass-card p-6 animate-fade-in" style={{ animationDelay: '600ms' }}>
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                            <div>
-                                <h3 className="text-lg font-semibold text-gray-200 tracking-tight">Recent Transactions</h3>
-                                <p className="text-sm text-gray-500 mt-1">Latest financial activity from all channels</p>
-                            </div>
-                            <div className="flex gap-2">
-                                <button className="px-3 py-1.5 text-xs font-medium bg-indigo-500/10 text-indigo-400 rounded-md hover:bg-indigo-500/20 transition-colors">Export CSV</button>
-                                <button className="text-gray-400 hover:text-white transition-colors p-1.5 hover:bg-white/5 rounded-md">
-                                    <Icon name="Filter" size={16} />
-                                </button>
+                    <div className="p-4 border-t border-slate-800">
+                        <div className="p-3 bg-slate-900/50 rounded-xl border border-slate-800/50">
+                            <div className="flex items-center gap-3">
+                                <Avatar name="Admin User" size="w-8 h-8" />
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-semibold truncate">System Architect</p>
+                                    <p className="text-[10px] text-slate-500 truncate">v2.4.1-stable</p>
+                                </div>
                             </div>
                         </div>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
-                                <thead>
-                                    <tr className="text-xs text-gray-500 uppercase tracking-wider border-b border-gray-800">
-                                        <th className="pb-4 font-semibold pl-2">Customer</th>
-                                        <th className="pb-4 font-semibold">Date</th>
-                                        <th className="pb-4 font-semibold">Product</th>
-                                        <th className="pb-4 font-semibold">Amount</th>
-                                        <th className="pb-4 font-semibold text-right pr-2">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="text-sm">
-                                    {[1, 2, 3, 4, 5, 6].map((item, i) => (
-                                        <tr key={i} className="group hover:bg-white/[0.02] transition-colors border-b border-gray-800/50 last:border-0">
-                                            <td className="py-4 pl-2 flex items-center gap-3">
-                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-lg ${['bg-gradient-to-br from-indigo-500 to-purple-500', 'bg-gradient-to-br from-rose-500 to-orange-500', 'bg-gradient-to-br from-emerald-500 to-teal-500'][i % 3]}`}>
-                                                    {['JD', 'AS', 'MR', 'WK', 'PL', 'ST'][i]}
-                                                </div>
-                                                <div>
-                                                    <span className="font-medium text-gray-200 block">
-                                                        {['John Doe', 'Alice Smith', 'Michael Ross', 'William King', 'Paul Lee', 'Sarah Tate'][i]}
-                                                    </span>
-                                                    <span className="text-xs text-gray-500">
-                                                        {['john@example.com', 'alice@tech.io', 'mike@corp.net', 'will@design.co', 'paul@dev.io', 'sarah@web.net'][i]}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td className="py-4 text-gray-400 font-medium font-mono text-xs">Oct {24 - i}, 2023</td>
-                                            <td className="py-4 text-gray-300">
-                                                {['Pro Plan Subscription', 'Enterprise License', 'Consulting Hour', 'UI Kit Bundle', 'API Access', 'Server Upgrade'][i]}
-                                            </td>
-                                            <td className="py-4 font-medium text-gray-200">${(Math.random() * 1000 + 100).toFixed(2)}</td>
-                                            <td className="py-4 text-right pr-2">
-                                                <span className={`px-2.5 py-1 rounded-full text-xs font-semibold inline-flex items-center gap-1.5 ${
-                                                    i % 3 === 0 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 
-                                                    i % 3 === 1 ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 
-                                                    'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                                                }`}>
-                                                    <span className={`w-1.5 h-1.5 rounded-full ${i % 3 === 0 ? 'bg-emerald-400' : i % 3 === 1 ? 'bg-amber-400' : 'bg-blue-400'}`}></span>
-                                                    {i % 3 === 0 ? 'Paid' : i % 3 === 1 ? 'Pending' : 'Processing'}
-                                                </span>
-                                            </td>
-                                        </tr>
+                    </div>
+                </div>
+            );
+        };
+
+        const Header = () => (
+            <header className="h-16 border-b border-slate-800 flex items-center justify-between px-8 bg-slate-950/20 backdrop-blur-md">
+                <div className="flex items-center gap-4">
+                    <div className="relative group">
+                        <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                        <input 
+                            type="text" 
+                            placeholder="Search metrics, reports, users..." 
+                            className="bg-slate-900/50 border border-slate-800 rounded-lg pl-10 pr-4 py-1.5 text-sm w-80 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/50 transition-all"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-600 font-mono pointer-events-none group-focus-within:hidden">⌘K</span>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                    <button className="p-2 text-slate-400 hover:text-indigo-400 hover:bg-slate-800 rounded-full transition-colors relative">
+                        <Icon name="bell" className="w-5 h-5" />
+                        <span className="absolute top-2 right-2 w-2 h-2 bg-indigo-500 rounded-full border-2 border-slate-950"></span>
+                    </button>
+                    <div className="h-6 w-px bg-slate-800 mx-2"></div>
+                    <button className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow-premium transition-all active:scale-95">
+                        <Icon name="dashboard" className="w-3.5 h-3.5" />
+                        Create Report
+                    </button>
+                </div>
+            </header>
+        );
+
+        // --- Widget Components ---
+
+        const KPICard = ({ title, value, change, trend, icon, delay = 0 }) => {
+            const isUp = trend === 'up';
+            return (
+                <div className={`widget-card p-5 rounded-2xl animate-in`} style={{ animationDelay: `${delay}ms` }}>
+                    <div className="flex justify-between items-start mb-4">
+                        <div className="p-2 bg-indigo-600/10 rounded-lg text-indigo-400 border border-indigo-600/20">
+                            <Icon name={icon} className="w-4 h-4" />
+                        </div>
+                        <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold ${
+                            isUp ? 'text-emerald-400 bg-emerald-400/10 border border-emerald-400/20' : 'text-rose-400 bg-rose-400/10 border border-rose-400/20'
+                        }`}>
+                            <Icon name={isUp ? 'trendUp' : 'trendDown'} className="w-3 h-3" />
+                            {change}
+                        </div>
+                    </div>
+                    <h3 className="text-slate-400 text-xs font-medium mb-1 tracking-wide uppercase">{title}</h3>
+                    <div className="flex items-baseline gap-2">
+                        <span className="text-2xl font-bold tracking-tight text-white metric-glow">{value}</span>
+                        <span className="text-[10px] text-slate-500 font-medium">vs prev 30d</span>
+                    </div>
+                    <div className="mt-4 h-1 w-full bg-slate-800 rounded-full overflow-hidden">
+                        <div className={`h-full ${isUp ? 'bg-indigo-500' : 'bg-rose-500'} transition-all duration-1000`} style={{ width: '65%' }}></div>
+                    </div>
+                </div>
+            );
+        };
+
+        const ChartWidget = ({ title, type, delay = 0, className = "" }) => (
+            <div className={`widget-card rounded-2xl flex flex-col animate-in ${className}`} style={{ animationDelay: `${delay}ms` }}>
+                <div className="p-5 border-b border-slate-800 flex justify-between items-center">
+                    <h3 className="text-sm font-semibold tracking-tight text-slate-200">{title}</h3>
+                    <div className="flex gap-2">
+                        <button className="p-1 text-slate-500 hover:text-slate-300 transition-colors"><Icon name="refresh" className="w-3.5 h-3.5" /></button>
+                        <button className="p-1 text-slate-500 hover:text-slate-300 transition-colors"><Icon name="more" className="w-3.5 h-3.5" /></button>
+                    </div>
+                </div>
+                <div className="p-5 flex-1 min-h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                        {type === 'area' ? (
+                            <AreaChart data={TIMESERIES_DATA}>
+                                <defs>
+                                    <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
+                                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1e293b" />
+                                <XAxis dataKey="date" hide />
+                                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#64748b'}} />
+                                <Tooltip 
+                                    contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', color: '#f8fafc', fontSize: '12px' }}
+                                    itemStyle={{ padding: '0' }}
+                                />
+                                <Area type="monotone" dataKey="revenue" stroke="#6366f1" strokeWidth={2} fillOpacity={1} fill="url(#colorRev)" />
+                            </AreaChart>
+                        ) : (
+                            <BarChart data={TOP_PRODUCTS}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1e293b" />
+                                <XAxis dataKey="name" hide />
+                                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#64748b'}} />
+                                <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '8px' }} />
+                                <Bar dataKey="sales" fill="#6366f1" radius={[4, 4, 0, 0]}>
+                                    {TOP_PRODUCTS.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={index === 0 ? '#818cf8' : '#334155'} />
                                     ))}
-                                </tbody>
-                            </table>
+                                </Bar>
+                            </BarChart>
+                        )}
+                    </ResponsiveContainer>
+                </div>
+            </div>
+        );
+
+        const ActivityFeed = ({ delay = 0 }) => (
+            <div className="widget-card rounded-2xl animate-in" style={{ animationDelay: `${delay}ms` }}>
+                <div className="p-5 border-b border-slate-800">
+                    <h3 className="text-sm font-semibold text-slate-200">System Monitoring</h3>
+                </div>
+                <div className="p-5 space-y-6">
+                    {RECENT_ALERTS.map(alert => (
+                        <div key={alert.id} className="flex gap-4">
+                            <div className={`mt-1 w-2 h-2 rounded-full shrink-0 ${
+                                alert.type === 'danger' ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]' :
+                                alert.type === 'warning' ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]' : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]'
+                            }`}></div>
+                            <div className="flex-1 space-y-1">
+                                <div className="flex justify-between items-center">
+                                    <p className="text-xs font-semibold text-slate-200">{alert.title}</p>
+                                    <span className="text-[10px] text-slate-500 font-mono">{alert.time}</span>
+                                </div>
+                                <p className="text-[11px] text-slate-400 leading-relaxed">{alert.body}</p>
+                            </div>
+                        </div>
+                    ))}
+                    <button className="w-full py-2 bg-slate-900 border border-slate-800 rounded-lg text-[10px] font-bold text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-all">
+                        VIEW SYSTEM LOGS
+                    </button>
+                </div>
+            </div>
+        );
+
+        const ProductGrid = ({ delay = 0 }) => (
+            <div className="widget-card rounded-2xl animate-in overflow-hidden" style={{ animationDelay: `${delay}ms` }}>
+                <div className="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-900/20">
+                    <h3 className="text-sm font-semibold text-slate-200">Active Strategic Initiatives</h3>
+                    <Badge variant="info">5 Total</Badge>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                        <thead>
+                            <tr className="border-b border-slate-800 text-slate-500 font-medium tracking-wide uppercase">
+                                <th className="px-6 py-4 font-semibold">Initiative</th>
+                                <th className="px-6 py-4 font-semibold">Performance</th>
+                                <th className="px-6 py-4 font-semibold">Status</th>
+                                <th className="px-6 py-4 font-semibold text-right">Revenue YTD</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/50">
+                            {TOP_PRODUCTS.map(product => (
+                                <tr key={product.id} className="hover:bg-slate-800/30 transition-colors">
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded bg-slate-800 flex items-center justify-center font-mono font-bold text-indigo-400">
+                                                {product.name[0]}
+                                            </div>
+                                            <span className="font-semibold text-slate-200">{product.name}</span>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-24 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                                <div 
+                                                    className={`h-full ${product.growth > 10 ? 'bg-emerald-500' : product.growth > 0 ? 'bg-indigo-500' : 'bg-rose-500'}`} 
+                                                    style={{ width: `${Math.abs(product.growth * 3)}%` }}
+                                                ></div>
+                                            </div>
+                                            <span className={`font-mono font-bold ${product.growth > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                                {product.growth > 0 ? '+' : ''}{product.growth}%
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 uppercase">
+                                        <Badge variant={product.status === 'active' ? 'success' : product.status === 'review' ? 'warning' : 'danger'}>
+                                            {product.status}
+                                        </Badge>
+                                    </td>
+                                    <td className="px-6 py-4 text-right font-mono font-bold text-slate-300">
+                                        ${(product.revenue / 1000).toFixed(1)}K
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        );
+
+        // --- Main App ---
+
+        const DashboardView = () => {
+            return (
+                <div className="p-8 space-y-8 max-w-[1600px] mx-auto overflow-y-auto h-full">
+                    {/* Welcome Header */}
+                    <div className="flex justify-between items-end animate-in">
+                        <div>
+                            <h2 className="text-3xl font-bold tracking-tight mb-2">Executive Summary</h2>
+                            <div className="flex items-center gap-2 text-slate-500 text-sm">
+                                <span>Operations Overview</span>
+                                <Icon name="chevronRight" className="w-3 h-3" />
+                                <span className="text-slate-300">Quarterly Performance</span>
+                            </div>
+                        </div>
+                        <div className="flex gap-3">
+                            <button className="px-4 py-2 border border-slate-800 rounded-lg text-sm font-semibold hover:bg-slate-800 transition-all">
+                                12 May 2024 - 11 Jun 2024
+                            </button>
+                            <button className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-semibold transition-all">
+                                Filters
+                            </button>
                         </div>
                     </div>
+
+                    {/* KPI Section */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <KPICard title="Total Net Revenue" value="$422.5K" change="+14.2%" trend="up" icon="analytics" delay={100} />
+                        <KPICard title="Session Conversion" value="3.42%" change="-2.1%" trend="down" icon="dashboard" delay={150} />
+                        <KPICard title="Customer LTV" value="$1,240" change="+8.9%" trend="up" icon="users" delay={200} />
+                        <KPICard title="Operational Load" value="12.4ms" change="+0.4%" trend="up" icon="settings" delay={250} />
+                    </div>
+
+                    {/* Charts & Monitoring */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <ChartWidget title="Revenue Growth Forecast" type="area" delay={300} className="lg:col-span-8" />
+                        <ActivityFeed delay={350} className="lg:col-span-4" />
+                    </div>
+
+                    {/* Tables & Deep Dive */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <ProductGrid delay={400} className="lg:col-span-9" />
+                        <ChartWidget title="Product Share" type="bar" delay={450} className="lg:col-span-3" />
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [view, setView] = useState('dashboard');
+            
+            return (
+                <div className="flex h-screen bg-slate-950 font-sans text-slate-100">
+                    <Sidebar currentView={view} setView={setView} />
                     
-                    <footer className="mt-12 text-center text-gray-600 text-sm">
-                        <p>© 2026 Antigravity Systems. All rights reserved.</p>
-                    </footer>
+                    <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+                        <Header />
+                        <main className="flex-1 overflow-hidden">
+                            {view === 'dashboard' ? <DashboardView /> : (
+                                <div className="h-full flex items-center justify-center text-slate-500 animate-in">
+                                    <div className="text-center">
+                                        <div className="w-12 h-12 border-2 border-slate-800 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4"></div>
+                                        <p className="text-sm font-medium">Loading {view} module...</p>
+                                    </div>
+                                </div>
+                            )}
+                        </main>
+                    </div>
+
+                    {/* Command Palette Overlay (Visual only) */}
+                    <div className="fixed inset-0 pointer-events-none z-50 flex items-start justify-center pt-[15vh]">
+                        {/* Hidden by default, triggered by CMD+K logic (not implemented but visual cues present) */}
+                    </div>
                 </div>
             );
         };
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<Dashboard />);
+        root.render(<App />);
     </script>
 </body>
 </html>
