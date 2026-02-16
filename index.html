@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -23,7 +23,7 @@
         extend: {
           fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
           colors: {
-            bg: '#0f172a',
+            bg: '#0b1220',
             panel: '#111827',
             panel2: '#1f2937',
             borderc: '#334155',
@@ -31,9 +31,6 @@
             success: '#22c55e',
             danger: '#f43f5e',
             warn: '#f59e0b'
-          },
-          boxShadow: {
-            glow: '0 0 0 1px rgba(99,102,241,.18), 0 12px 30px -16px rgba(99,102,241,.55)'
           }
         }
       }
@@ -42,225 +39,335 @@
 
   <style>
     body { font-family: Inter, system-ui, sans-serif; background: #0b1220; }
-    .glass { background: rgba(17, 24, 39, .72); backdrop-filter: blur(8px); border: 1px solid rgba(148,163,184,.15); }
-    .card { background: linear-gradient(180deg, rgba(30,41,59,.76), rgba(15,23,42,.84)); border: 1px solid rgba(148,163,184,.13); }
-    .fade-up { animation: fadeUp .45s ease-out both; }
-    @keyframes fadeUp { from { opacity:0; transform: translateY(8px);} to {opacity:1; transform: translateY(0);} }
-    .spark path { fill: none; stroke-width: 2.2; }
+    .glass { background: rgba(17,24,39,.7); backdrop-filter: blur(9px); border: 1px solid rgba(148,163,184,.16); }
+    .card { background: linear-gradient(180deg, rgba(30,41,59,.78), rgba(15,23,42,.88)); border: 1px solid rgba(148,163,184,.16); }
+    .fade-up { animation: fadeUp .4s ease-out both; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+    .skeleton { background: linear-gradient(90deg, rgba(51,65,85,.3), rgba(71,85,105,.45), rgba(51,65,85,.3)); background-size: 200% 100%; animation: shimmer 1.2s linear infinite; }
+    @keyframes shimmer { from { background-position: 200% 0 } to { background-position: -200% 0 } }
   </style>
 </head>
-<body class="text-slate-100 min-h-screen">
+<body class="dark text-slate-100 min-h-screen">
   <div id="root"></div>
 
   <script type="text/babel">
-    const { useMemo, useState } = React;
+    const { useMemo, useState, useEffect, createContext, useContext } = React;
     const {
       ResponsiveContainer,
       LineChart, Line,
       BarChart, Bar,
-      XAxis, YAxis, CartesianGrid, Tooltip,
-      Legend
+      XAxis, YAxis, CartesianGrid, Tooltip, Legend
     } = window.Recharts || {};
+
+    const DashboardContext = createContext(null);
 
     const formatCurrency = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
     const formatCompact = (n) => new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(n);
-    const formatPct = (n) => `${n > 0 ? '+' : ''}${n.toFixed(1)}%`;
 
-    const days = Array.from({ length: 120 }, (_, i) => {
-      const d = new Date();
-      d.setDate(d.getDate() - (119 - i));
-      const t = i + 1;
-      const seasonal = Math.sin(t / 8) * 1200;
-      const trend = t * 38;
-      const noise = (Math.random() - 0.5) * 1300;
-      const revenue = Math.max(3800, 12000 + trend + seasonal + noise);
-      const users = Math.max(300, 900 + t * 3 + Math.sin(t / 5) * 80 + (Math.random() - 0.5) * 60);
-      const conversion = Math.max(1.6, Math.min(7.8, 3.2 + Math.sin(t / 9) * 0.7 + (Math.random() - 0.5) * 0.35));
-      return {
-        date: d,
-        label: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        revenue: Math.round(revenue),
-        users: Math.round(users),
-        conversion: Number(conversion.toFixed(2))
-      };
-    });
+    function generateBaseData() {
+      return Array.from({ length: 180 }, (_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() - (179 - i));
+        const x = i + 1;
+        const revenue = 11000 + x * 31 + Math.sin(x / 7) * 1500 + (Math.random() - 0.5) * 1100;
+        const users = 850 + x * 2.6 + Math.sin(x / 6) * 80 + (Math.random() - 0.5) * 65;
+        const conversion = 3 + Math.sin(x / 11) * 0.7 + (Math.random() - 0.5) * 0.3;
+        return {
+          date: d,
+          label: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          revenue: Math.max(3500, Math.round(revenue)),
+          users: Math.max(220, Math.round(users)),
+          conversion: Number(Math.max(1.4, Math.min(8.8, conversion)).toFixed(2))
+        };
+      });
+    }
 
-    const categoryMultiplier = {
-      All: 1,
-      Enterprise: 1.3,
-      SMB: 1.05,
-      Consumer: 0.86
-    };
+    const BASE_DATA = generateBaseData();
+    const MULTIPLIER = { All: 1, Enterprise: 1.32, SMB: 1.07, Consumer: 0.83 };
 
-    function MiniSpark({ data, color = '#818cf8' }) {
-      const w = 120, h = 34;
-      const min = Math.min(...data), max = Math.max(...data);
+    function MiniSparkline({ values, up }) {
+      const w = 120, h = 30;
+      const min = Math.min(...values), max = Math.max(...values);
       const range = max - min || 1;
-      const points = data.map((v, i) => {
-        const x = (i / (data.length - 1)) * w;
-        const y = h - ((v - min) / range) * h;
-        return `${x},${y}`;
-      }).join(' ');
+      const pts = values.map((v, i) => `${(i / (values.length - 1)) * w},${h - ((v - min) / range) * h}`).join(' ');
       return (
-        <svg className="spark" width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
-          <path d={`M ${points.replace(/ /g, ' L ')}`} stroke={color} />
+        <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
+          <polyline points={pts} fill="none" stroke={up ? '#22c55e' : '#f43f5e'} strokeWidth="2.2" />
         </svg>
       );
     }
 
-    function KpiCard({ title, value, delta, spark, icon, tone = 'text-primary', delay = 0 }) {
+    function Widget({ title, subtitle, onRefresh, onRetry, loading, error, children }) {
+      return (
+        <section className="card rounded-2xl overflow-hidden fade-up">
+          <header className="px-5 py-4 border-b border-slate-700/70 flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold tracking-tight">{title}</h3>
+              {subtitle ? <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p> : null}
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={onRefresh} className="text-xs px-2.5 py-1 rounded-lg border border-slate-600 hover:bg-slate-700/40">Refresh</button>
+              <button className="text-xs px-2.5 py-1 rounded-lg border border-slate-600 hover:bg-slate-700/40">Export</button>
+            </div>
+          </header>
+          <div className="p-5 min-h-[240px]">
+            {loading ? (
+              <div className="space-y-3">
+                <div className="h-5 w-1/3 rounded skeleton"></div>
+                <div className="h-40 rounded-xl skeleton"></div>
+                <div className="h-4 w-2/3 rounded skeleton"></div>
+              </div>
+            ) : error ? (
+              <div className="h-full min-h-[180px] grid place-items-center text-center">
+                <div>
+                  <p className="text-rose-300 font-medium mb-2">Failed to load widget</p>
+                  <button onClick={onRetry} className="text-xs px-3 py-1.5 rounded-lg bg-rose-500/20 text-rose-200 border border-rose-500/30">Retry</button>
+                </div>
+              </div>
+            ) : children}
+          </div>
+        </section>
+      );
+    }
+
+    function KpiCard({ label, value, delta, comparison, spark }) {
       const up = delta >= 0;
       return (
-        <div className="card rounded-2xl p-5 shadow-glow hover:-translate-y-0.5 transition-all duration-300 fade-up" style={{ animationDelay: `${delay}ms` }}>
-          <div className="flex items-start justify-between mb-3">
-            <div className="text-slate-400 text-sm font-medium">{title}</div>
-            <div className={`text-xs px-2 py-1 rounded-full ${up ? 'bg-emerald-500/15 text-emerald-300' : 'bg-rose-500/15 text-rose-300'}`}>
-              {up ? '▲' : '▼'} {Math.abs(delta).toFixed(1)}%
+        <article className="card rounded-2xl p-5">
+          <div className="flex justify-between items-start">
+            <p className="text-sm text-slate-300">{label}</p>
+            <span className={`text-xs px-2 py-1 rounded-full ${up ? 'bg-emerald-500/15 text-emerald-300' : 'bg-rose-500/15 text-rose-300'}`}>
+              {up ? '↑' : '↓'} {Math.abs(delta).toFixed(1)}% {comparison}
+            </span>
+          </div>
+          <p className="text-3xl font-extrabold tracking-tight mt-3">{value}</p>
+          <div className="mt-3"><MiniSparkline values={spark} up={up} /></div>
+        </article>
+      );
+    }
+
+    function DashboardBody() {
+      const { filters, refreshNonce, theme } = useContext(DashboardContext);
+      const [loading, setLoading] = useState(false);
+      const [errors, setErrors] = useState({ line: false, bar: false, table: false });
+
+      useEffect(() => {
+        setLoading(true);
+        const t = setTimeout(() => {
+          setLoading(false);
+          setErrors({ line: false, bar: false, table: false });
+        }, 650);
+        return () => clearTimeout(t);
+      }, [filters.range, filters.category, refreshNonce]);
+
+      const filtered = useMemo(() => {
+        const n = filters.range === 'all' ? 180 : Number(filters.range);
+        const m = MULTIPLIER[filters.category] || 1;
+        return BASE_DATA.slice(-n).map(d => ({
+          ...d,
+          revenue: Math.round(d.revenue * m),
+          users: Math.round(d.users * (0.9 + m * 0.13)),
+          conversion: Number(Math.min(10, d.conversion * (0.93 + m * 0.08)).toFixed(2))
+        }));
+      }, [filters]);
+
+      const previous = useMemo(() => {
+        const n = filters.range === 'all' ? 180 : Number(filters.range);
+        return BASE_DATA.slice(-(n * 2), -n);
+      }, [filters.range]);
+
+      const kpis = useMemo(() => {
+        const sumRevenue = filtered.reduce((a,b)=>a+b.revenue,0);
+        const sumUsers = filtered.reduce((a,b)=>a+b.users,0);
+        const avgConv = filtered.reduce((a,b)=>a+b.conversion,0) / filtered.length;
+        const growth = ((filtered.at(-1).revenue - filtered[0].revenue) / filtered[0].revenue) * 100;
+
+        const prevRevenue = previous.reduce((a,b)=>a+b.revenue,0) || 1;
+        const prevUsers = previous.reduce((a,b)=>a+b.users,0) || 1;
+        const prevConv = previous.length ? previous.reduce((a,b)=>a+b.conversion,0) / previous.length : 1;
+        const prevGrowth = previous.length > 1 ? ((previous.at(-1).revenue - previous[0].revenue) / previous[0].revenue) * 100 : growth;
+
+        return {
+          revenue: { value: formatCurrency(sumRevenue), delta: ((sumRevenue - prevRevenue) / prevRevenue) * 100, spark: filtered.slice(-20).map(x=>x.revenue) },
+          users: { value: formatCompact(sumUsers), delta: ((sumUsers - prevUsers) / prevUsers) * 100, spark: filtered.slice(-20).map(x=>x.users) },
+          conversion: { value: `${avgConv.toFixed(2)}%`, delta: ((avgConv - prevConv) / prevConv) * 100, spark: filtered.slice(-20).map(x=>x.conversion) },
+          growth: { value: `${growth >= 0 ? '+' : ''}${growth.toFixed(1)}%`, delta: growth - prevGrowth, spark: filtered.slice(-20).map((x,i,arr)=> i===0?0:((x.revenue-arr[i-1].revenue)/arr[i-1].revenue)*100) }
+        };
+      }, [filtered, previous]);
+
+      const barData = useMemo(() => {
+        const out = [];
+        const size = Math.max(4, Math.floor(filtered.length / 9));
+        for (let i=0; i<filtered.length; i+=size) {
+          const block = filtered.slice(i, i + size);
+          out.push({
+            label: block[Math.floor(block.length / 2)]?.label || '',
+            users: Math.round(block.reduce((a,b)=>a+b.users,0) / block.length),
+            conversion: Number((block.reduce((a,b)=>a+b.conversion,0) / block.length).toFixed(2))
+          });
+        }
+        return out;
+      }, [filtered]);
+
+      const topRows = useMemo(() => {
+        return [
+          { product: 'Quantum Pro', revenue: 124000, users: 8800, growth: 14.2 },
+          { product: 'Neural Team', revenue: 91300, users: 6400, growth: 6.5 },
+          { product: 'Orbit SMB', revenue: 78200, users: 5900, growth: -2.1 },
+          { product: 'Nova Consumer', revenue: 66300, users: 9100, growth: 3.3 },
+          { product: 'Atlas Platform', revenue: 58800, users: 4200, growth: 9.7 }
+        ].map(r => ({ ...r, revenue: Math.round(r.revenue * (MULTIPLIER[filters.category] || 1)) }));
+      }, [filters.category]);
+
+      return (
+        <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-5 md:space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            <KpiCard label="Revenue" value={kpis.revenue.value} delta={kpis.revenue.delta} comparison="vs prev period" spark={kpis.revenue.spark} />
+            <KpiCard label="Users" value={kpis.users.value} delta={kpis.users.delta} comparison="vs prev period" spark={kpis.users.spark} />
+            <KpiCard label="Conversion" value={kpis.conversion.value} delta={kpis.conversion.delta} comparison="vs prev period" spark={kpis.conversion.spark} />
+            <KpiCard label="Growth" value={kpis.growth.value} delta={kpis.growth.delta} comparison="vs prev period" spark={kpis.growth.spark} />
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
+            <div className="xl:col-span-8">
+              <Widget
+                title="Revenue Trend"
+                subtitle="Daily revenue performance"
+                loading={loading}
+                error={errors.line}
+                onRefresh={() => setLoading(true) || setTimeout(()=>setLoading(false), 500)}
+                onRetry={() => setErrors(s => ({ ...s, line: false }))}
+              >
+                <div className="h-72">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={filtered}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                      <XAxis dataKey="label" minTickGap={24} tick={{ fill: '#94a3b8', fontSize: 11 }} />
+                      <YAxis tick={{ fill: '#94a3b8', fontSize: 11 }} tickFormatter={(v)=>`$${Math.round(v/1000)}k`} />
+                      <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '10px' }} formatter={(v)=>formatCurrency(v)} />
+                      <Line type="monotone" dataKey="revenue" stroke="#818cf8" strokeWidth={3} dot={false} activeDot={{ r: 5 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </Widget>
+            </div>
+
+            <div className="xl:col-span-4">
+              <Widget
+                title="Users & Conversion"
+                subtitle="Period average by bucket"
+                loading={loading}
+                error={errors.bar}
+                onRefresh={() => setLoading(true) || setTimeout(()=>setLoading(false), 500)}
+                onRetry={() => setErrors(s => ({ ...s, bar: false }))}
+              >
+                <div className="h-72">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={barData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                      <XAxis dataKey="label" tick={{ fill: '#94a3b8', fontSize: 11 }} />
+                      <YAxis yAxisId="left" tick={{ fill: '#94a3b8', fontSize: 11 }} />
+                      <YAxis yAxisId="right" orientation="right" tickFormatter={(v)=>`${v}%`} tick={{ fill: '#94a3b8', fontSize: 11 }} />
+                      <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '10px' }} />
+                      <Legend wrapperStyle={{ color: '#cbd5e1' }} />
+                      <Bar yAxisId="left" dataKey="users" fill="#60a5fa" radius={[8,8,0,0]} />
+                      <Bar yAxisId="right" dataKey="conversion" fill="#f472b6" radius={[8,8,0,0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </Widget>
             </div>
           </div>
-          <div className={`text-3xl font-extrabold tracking-tight ${tone}`}>{value}</div>
-          <div className="mt-3 flex items-end justify-between">
-            <MiniSpark data={spark} color={up ? '#22c55e' : '#f43f5e'} />
-            <div className="text-slate-500 text-xs">{icon}</div>
-          </div>
+
+          <Widget
+            title="Top Products"
+            subtitle="Coordinated with global filters"
+            loading={loading}
+            error={errors.table}
+            onRefresh={() => setLoading(true) || setTimeout(()=>setLoading(false), 500)}
+            onRetry={() => setErrors(s => ({ ...s, table: false }))}
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-slate-400 border-b border-slate-700">
+                    <th className="py-2">Product</th>
+                    <th className="py-2">Revenue</th>
+                    <th className="py-2">Users</th>
+                    <th className="py-2">Growth</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {topRows.map((r) => (
+                    <tr key={r.product} className="border-b border-slate-800/80 hover:bg-slate-700/20">
+                      <td className="py-2.5 font-medium">{r.product}</td>
+                      <td className="py-2.5">{formatCurrency(r.revenue)}</td>
+                      <td className="py-2.5">{formatCompact(r.users)}</td>
+                      <td className={`py-2.5 ${r.growth >= 0 ? 'text-emerald-300' : 'text-rose-300'}`}>{r.growth >= 0 ? '+' : ''}{r.growth.toFixed(1)}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Widget>
         </div>
       );
     }
 
     function App() {
-      const [range, setRange] = useState('30');
-      const [category, setCategory] = useState('All');
+      const [filters, setFilters] = useState({ range: '30', category: 'All' });
+      const [refreshNonce, setRefreshNonce] = useState(0);
+      const [theme, setTheme] = useState('dark');
 
-      const filtered = useMemo(() => {
-        const daysBack = range === 'all' ? 120 : Number(range);
-        const slice = days.slice(-daysBack);
-        const m = categoryMultiplier[category] || 1;
-        return slice.map(r => ({
-          ...r,
-          revenue: Math.round(r.revenue * m),
-          users: Math.round(r.users * (0.9 + m * 0.12)),
-          conversion: Number(Math.min(9.9, r.conversion * (0.93 + m * 0.08)).toFixed(2))
-        }));
-      }, [range, category]);
-
-      const previousWindow = useMemo(() => {
-        const daysBack = range === 'all' ? 120 : Number(range);
-        return days.slice(-(daysBack * 2), -daysBack);
-      }, [range]);
-
-      const agg = useMemo(() => {
-        const sumRevenue = filtered.reduce((a,b)=>a+b.revenue,0);
-        const sumUsers = filtered.reduce((a,b)=>a+b.users,0);
-        const avgConv = filtered.reduce((a,b)=>a+b.conversion,0) / filtered.length;
-        const growth = ((filtered[filtered.length-1].revenue - filtered[0].revenue) / filtered[0].revenue) * 100;
-
-        const prevRevenue = previousWindow.reduce((a,b)=>a+b.revenue,0) || 1;
-        const prevUsers = previousWindow.reduce((a,b)=>a+b.users,0) || 1;
-        const prevConv = previousWindow.length ? previousWindow.reduce((a,b)=>a+b.conversion,0) / previousWindow.length : 1;
-        const prevGrowth = previousWindow.length > 1 ? ((previousWindow[previousWindow.length-1].revenue - previousWindow[0].revenue) / previousWindow[0].revenue) * 100 : growth;
-
-        return {
-          revenue: { value: sumRevenue, delta: ((sumRevenue - prevRevenue) / prevRevenue) * 100, spark: filtered.slice(-18).map(x=>x.revenue) },
-          users: { value: sumUsers, delta: ((sumUsers - prevUsers) / prevUsers) * 100, spark: filtered.slice(-18).map(x=>x.users) },
-          conversion: { value: avgConv, delta: ((avgConv - prevConv) / prevConv) * 100, spark: filtered.slice(-18).map(x=>x.conversion) },
-          growth: { value: growth, delta: growth - prevGrowth, spark: filtered.slice(-18).map((x, i, arr)=> i===0 ? 0 : ((x.revenue-arr[i-1].revenue)/arr[i-1].revenue)*100) }
-        }
-      }, [filtered, previousWindow]);
-
-      const bars = useMemo(() => {
-        const chunks = [];
-        const size = Math.max(3, Math.floor(filtered.length / 8));
-        for (let i=0; i<filtered.length; i+=size) {
-          const block = filtered.slice(i, i+size);
-          const label = block[Math.floor(block.length/2)]?.label || '';
-          chunks.push({
-            label,
-            users: Math.round(block.reduce((a,b)=>a+b.users,0) / block.length),
-            conversion: Number((block.reduce((a,b)=>a+b.conversion,0) / block.length).toFixed(2))
-          });
-        }
-        return chunks;
-      }, [filtered]);
+      useEffect(() => {
+        document.documentElement.classList.toggle('dark', theme === 'dark');
+      }, [theme]);
 
       if (!window.Recharts || !LineChart) {
-        return <div className="min-h-screen grid place-items-center p-6 text-center text-slate-300">Unable to load chart libraries. Run with internet access and open via local server.</div>;
+        return <div className="min-h-screen grid place-items-center p-6 text-center text-slate-300">Unable to load chart libraries. Ensure internet access and open via local server.</div>;
       }
 
       return (
-        <div className="max-w-7xl mx-auto p-5 md:p-8 space-y-6">
-          <header className="glass rounded-2xl p-5 md:p-6 fade-up">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-              <div>
-                <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Antigravity Dashboard</h1>
-                <p className="text-slate-400 mt-1">Executive metrics, trends, and conversion performance.</p>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="glass rounded-xl px-3 py-2">
-                  <label className="text-xs text-slate-400 mr-2">Date Range</label>
-                  <select value={range} onChange={(e)=>setRange(e.target.value)} className="bg-transparent text-sm outline-none">
-                    <option value="7" className="text-black">Last 7 days</option>
-                    <option value="30" className="text-black">Last 30 days</option>
-                    <option value="90" className="text-black">Last 90 days</option>
-                    <option value="all" className="text-black">All data</option>
-                  </select>
+        <DashboardContext.Provider value={{ filters, setFilters, refreshNonce, theme }}>
+          <div className="max-w-7xl mx-auto p-4 md:p-8">
+            <header className="glass rounded-2xl p-5 md:p-6">
+              <div className="flex flex-col xl:flex-row gap-4 xl:items-center xl:justify-between">
+                <div>
+                  <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Antigravity Dashboard</h1>
+                  <p className="text-slate-400 mt-1">Fixed-layout executive dashboard with coordinated global filters.</p>
                 </div>
 
-                <div className="glass rounded-xl px-3 py-2">
-                  <label className="text-xs text-slate-400 mr-2">Category</label>
-                  <select value={category} onChange={(e)=>setCategory(e.target.value)} className="bg-transparent text-sm outline-none">
-                    <option value="All" className="text-black">All</option>
-                    <option value="Enterprise" className="text-black">Enterprise</option>
-                    <option value="SMB" className="text-black">SMB</option>
-                    <option value="Consumer" className="text-black">Consumer</option>
-                  </select>
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="glass rounded-xl px-3 py-2">
+                    <label className="text-xs text-slate-400 mr-2">Date range</label>
+                    <select value={filters.range} onChange={(e)=>setFilters(f=>({ ...f, range: e.target.value }))} className="bg-transparent text-sm outline-none">
+                      <option className="text-black" value="7">Last 7 days</option>
+                      <option className="text-black" value="30">Last 30 days</option>
+                      <option className="text-black" value="90">Last 90 days</option>
+                      <option className="text-black" value="all">All data</option>
+                    </select>
+                  </div>
+
+                  <div className="glass rounded-xl px-3 py-2">
+                    <label className="text-xs text-slate-400 mr-2">Category</label>
+                    <select value={filters.category} onChange={(e)=>setFilters(f=>({ ...f, category: e.target.value }))} className="bg-transparent text-sm outline-none">
+                      <option className="text-black" value="All">All</option>
+                      <option className="text-black" value="Enterprise">Enterprise</option>
+                      <option className="text-black" value="SMB">SMB</option>
+                      <option className="text-black" value="Consumer">Consumer</option>
+                    </select>
+                  </div>
+
+                  <button onClick={() => setRefreshNonce(n => n + 1)} className="text-sm px-3 py-2 rounded-xl border border-slate-600 hover:bg-slate-700/40">Refresh</button>
+                  <button className="text-sm px-3 py-2 rounded-xl border border-slate-600 hover:bg-slate-700/40">Export</button>
+                  <button onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} className="text-sm px-3 py-2 rounded-xl border border-slate-600 hover:bg-slate-700/40">Theme</button>
                 </div>
               </div>
-            </div>
-          </header>
+            </header>
+          </div>
 
-          <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-5">
-            <KpiCard title="Revenue" value={formatCurrency(agg.revenue.value)} delta={agg.revenue.delta} spark={agg.revenue.spark} icon="Revenue" tone="text-indigo-300" delay={60} />
-            <KpiCard title="Users" value={formatCompact(agg.users.value)} delta={agg.users.delta} spark={agg.users.spark} icon="Users" tone="text-cyan-300" delay={110} />
-            <KpiCard title="Conversion" value={`${agg.conversion.value.toFixed(2)}%`} delta={agg.conversion.delta} spark={agg.conversion.spark} icon="CVR" tone="text-emerald-300" delay={160} />
-            <KpiCard title="Growth" value={formatPct(agg.growth.value)} delta={agg.growth.delta} spark={agg.growth.spark} icon="Growth" tone="text-amber-300" delay={210} />
-          </section>
-
-          <section className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-            <div className="card rounded-2xl p-5 md:p-6 fade-up" style={{ animationDelay: '250ms' }}>
-              <h2 className="text-lg font-semibold mb-4">Revenue Trend (Line)</h2>
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={filtered}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                    <XAxis dataKey="label" tick={{ fill: '#94a3b8', fontSize: 11 }} minTickGap={24} />
-                    <YAxis tick={{ fill: '#94a3b8', fontSize: 11 }} tickFormatter={(v)=>`$${Math.round(v/1000)}k`} />
-                    <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '10px' }} formatter={(v)=>formatCurrency(v)} />
-                    <Line type="monotone" dataKey="revenue" stroke="#818cf8" strokeWidth={3} dot={false} activeDot={{ r: 5 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            <div className="card rounded-2xl p-5 md:p-6 fade-up" style={{ animationDelay: '300ms' }}>
-              <h2 className="text-lg font-semibold mb-4">Users vs Conversion (Bar)</h2>
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={bars}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                    <XAxis dataKey="label" tick={{ fill: '#94a3b8', fontSize: 11 }} />
-                    <YAxis yAxisId="left" tick={{ fill: '#94a3b8', fontSize: 11 }} />
-                    <YAxis yAxisId="right" orientation="right" tick={{ fill: '#94a3b8', fontSize: 11 }} tickFormatter={(v)=>`${v}%`} />
-                    <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '10px' }} />
-                    <Legend wrapperStyle={{ color: '#cbd5e1' }} />
-                    <Bar yAxisId="left" dataKey="users" fill="#60a5fa" radius={[8,8,0,0]} />
-                    <Bar yAxisId="right" dataKey="conversion" fill="#f472b6" radius={[8,8,0,0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </section>
-        </div>
+          <DashboardBody />
+        </DashboardContext.Provider>
       );
     }
 
