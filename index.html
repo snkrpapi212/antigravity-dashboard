@@ -31,6 +31,10 @@
             success: '#22c55e',
             danger: '#f43f5e',
             warn: '#f59e0b'
+          },
+          boxShadow: {
+            soft: '0 10px 24px -18px rgba(2, 6, 23, 0.95)',
+            ring: '0 0 0 1px rgba(99,102,241,0.22), 0 14px 40px -28px rgba(99,102,241,0.55)'
           }
         }
       }
@@ -38,13 +42,70 @@
   </script>
 
   <style>
-    body { font-family: Inter, system-ui, sans-serif; background: #0b1220; }
-    .glass { background: rgba(17,24,39,.7); backdrop-filter: blur(9px); border: 1px solid rgba(148,163,184,.16); }
-    .card { background: linear-gradient(180deg, rgba(30,41,59,.78), rgba(15,23,42,.88)); border: 1px solid rgba(148,163,184,.16); }
-    .fade-up { animation: fadeUp .4s ease-out both; }
+    :root {
+      --bg-0: #070d1a;
+      --bg-1: #0b1220;
+      --bg-2: #111827;
+      --line: rgba(148,163,184,.16);
+      --line-soft: rgba(148,163,184,.10);
+      --text-soft: #94a3b8;
+      --primary: #6366f1;
+      --primary-2: #818cf8;
+    }
+
+    body {
+      font-family: Inter, system-ui, sans-serif;
+      background: radial-gradient(1400px 700px at 20% -10%, rgba(99,102,241,.18), transparent 45%),
+                  radial-gradient(900px 600px at 80% -10%, rgba(16,185,129,.08), transparent 45%),
+                  linear-gradient(180deg, var(--bg-0), var(--bg-1));
+    }
+
+    .glass {
+      background: linear-gradient(180deg, rgba(17,24,39,.78), rgba(15,23,42,.78));
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--line);
+      box-shadow: 0 1px 0 rgba(255,255,255,.03) inset;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(30,41,59,.78), rgba(15,23,42,.9));
+      border: 1px solid var(--line);
+      box-shadow: 0 12px 30px -26px rgba(2, 6, 23, .95);
+      transition: border-color .2s ease, transform .2s ease, box-shadow .25s ease;
+    }
+
+    .card:hover {
+      border-color: rgba(148,163,184,.25);
+      transform: translateY(-1px);
+      box-shadow: 0 16px 30px -24px rgba(2, 6, 23, .95);
+    }
+
+    .fade-up { animation: fadeUp .42s cubic-bezier(.2,.75,.2,1) both; }
     @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-    .skeleton { background: linear-gradient(90deg, rgba(51,65,85,.3), rgba(71,85,105,.45), rgba(51,65,85,.3)); background-size: 200% 100%; animation: shimmer 1.2s linear infinite; }
+
+    .skeleton {
+      background: linear-gradient(90deg, rgba(51,65,85,.3), rgba(71,85,105,.48), rgba(51,65,85,.3));
+      background-size: 200% 100%;
+      animation: shimmer 1.2s linear infinite;
+      border-radius: 10px;
+    }
     @keyframes shimmer { from { background-position: 200% 0 } to { background-position: -200% 0 } }
+
+    .focus-ring:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(99,102,241,.28);
+      border-color: rgba(99,102,241,.45) !important;
+    }
+
+    .kpi-value {
+      letter-spacing: -.025em;
+      text-wrap: balance;
+    }
+
+    .pill {
+      border: 1px solid var(--line-soft);
+      background: rgba(15,23,42,.55);
+    }
   </style>
 </head>
 <body class="dark text-slate-100 min-h-screen">
@@ -61,8 +122,13 @@
 
     const DashboardContext = createContext(null);
 
-    const formatCurrency = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
-    const formatCompact = (n) => new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(n);
+    const formatCurrency = (n) => new Intl.NumberFormat('en-US', {
+      style: 'currency', currency: 'USD', maximumFractionDigits: 0
+    }).format(n);
+
+    const formatCompact = (n) => new Intl.NumberFormat('en-US', {
+      notation: 'compact', maximumFractionDigits: 1
+    }).format(n);
 
     function generateBaseData() {
       return Array.from({ length: 180 }, (_, i) => {
@@ -86,42 +152,74 @@
     const MULTIPLIER = { All: 1, Enterprise: 1.32, SMB: 1.07, Consumer: 0.83 };
 
     function MiniSparkline({ values, up }) {
-      const w = 120, h = 30;
+      const w = 122, h = 30;
       const min = Math.min(...values), max = Math.max(...values);
       const range = max - min || 1;
       const pts = values.map((v, i) => `${(i / (values.length - 1)) * w},${h - ((v - min) / range) * h}`).join(' ');
       return (
-        <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
-          <polyline points={pts} fill="none" stroke={up ? '#22c55e' : '#f43f5e'} strokeWidth="2.2" />
+        <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} aria-hidden="true">
+          <polyline points={pts} fill="none" stroke={up ? '#22c55e' : '#f43f5e'} strokeWidth="2.25" />
         </svg>
+      );
+    }
+
+    function KpiCard({ label, value, delta, comparison, spark, tone = 'default', onClick }) {
+      const up = delta >= 0;
+      const toneClass = tone === 'primary' ? 'text-indigo-300' : tone === 'success' ? 'text-emerald-300' : tone === 'warn' ? 'text-amber-300' : 'text-slate-100';
+
+      return (
+        <article
+          className="card rounded-2xl p-5 cursor-pointer"
+          role="button"
+          tabIndex={0}
+          onClick={onClick}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onClick?.()}
+          aria-label={`${label} metric card`}
+        >
+          <div className="flex justify-between items-start gap-3">
+            <p className="text-sm text-slate-300 font-medium">{label}</p>
+            <span className={`text-xs px-2 py-1 rounded-full ${up ? 'bg-emerald-500/15 text-emerald-300' : 'bg-rose-500/15 text-rose-300'}`}>
+              {up ? '↑' : '↓'} {Math.abs(delta).toFixed(1)}% {comparison}
+            </span>
+          </div>
+
+          <p className={`kpi-value text-[2rem] leading-none font-extrabold mt-3 ${toneClass}`}>{value}</p>
+
+          <div className="mt-3 flex items-center justify-between gap-3">
+            <MiniSparkline values={spark} up={up} />
+            <span className="text-[11px] text-slate-500">last 20 points</span>
+          </div>
+        </article>
       );
     }
 
     function Widget({ title, subtitle, onRefresh, onRetry, loading, error, children }) {
       return (
         <section className="card rounded-2xl overflow-hidden fade-up">
-          <header className="px-5 py-4 border-b border-slate-700/70 flex items-center justify-between">
+          <header className="px-5 py-4 border-b border-slate-700/70 flex items-start justify-between gap-4">
             <div>
               <h3 className="font-semibold tracking-tight">{title}</h3>
-              {subtitle ? <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p> : null}
+              {subtitle ? <p className="text-xs text-slate-400 mt-1">{subtitle}</p> : null}
             </div>
-            <div className="flex items-center gap-2">
-              <button onClick={onRefresh} className="text-xs px-2.5 py-1 rounded-lg border border-slate-600 hover:bg-slate-700/40">Refresh</button>
-              <button className="text-xs px-2.5 py-1 rounded-lg border border-slate-600 hover:bg-slate-700/40">Export</button>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button onClick={onRefresh} className="focus-ring text-xs px-2.5 py-1 rounded-lg border border-slate-600 hover:bg-slate-700/40">Refresh</button>
+              <button className="focus-ring text-xs px-2.5 py-1 rounded-lg border border-slate-600 hover:bg-slate-700/40">Export</button>
             </div>
           </header>
+
           <div className="p-5 min-h-[240px]">
             {loading ? (
-              <div className="space-y-3">
-                <div className="h-5 w-1/3 rounded skeleton"></div>
-                <div className="h-40 rounded-xl skeleton"></div>
-                <div className="h-4 w-2/3 rounded skeleton"></div>
+              <div className="space-y-3" aria-busy="true" aria-live="polite">
+                <div className="h-5 w-1/3 skeleton"></div>
+                <div className="h-40 skeleton"></div>
+                <div className="h-4 w-2/3 skeleton"></div>
               </div>
             ) : error ? (
               <div className="h-full min-h-[180px] grid place-items-center text-center">
                 <div>
                   <p className="text-rose-300 font-medium mb-2">Failed to load widget</p>
-                  <button onClick={onRetry} className="text-xs px-3 py-1.5 rounded-lg bg-rose-500/20 text-rose-200 border border-rose-500/30">Retry</button>
+                  <button onClick={onRetry} className="focus-ring text-xs px-3 py-1.5 rounded-lg bg-rose-500/20 text-rose-200 border border-rose-500/30">Retry</button>
                 </div>
               </div>
             ) : children}
@@ -130,24 +228,17 @@
       );
     }
 
-    function KpiCard({ label, value, delta, comparison, spark }) {
-      const up = delta >= 0;
+    function MetricPill({ label, value }) {
       return (
-        <article className="card rounded-2xl p-5">
-          <div className="flex justify-between items-start">
-            <p className="text-sm text-slate-300">{label}</p>
-            <span className={`text-xs px-2 py-1 rounded-full ${up ? 'bg-emerald-500/15 text-emerald-300' : 'bg-rose-500/15 text-rose-300'}`}>
-              {up ? '↑' : '↓'} {Math.abs(delta).toFixed(1)}% {comparison}
-            </span>
-          </div>
-          <p className="text-3xl font-extrabold tracking-tight mt-3">{value}</p>
-          <div className="mt-3"><MiniSparkline values={spark} up={up} /></div>
-        </article>
+        <div className="pill rounded-xl px-3 py-2">
+          <p className="text-[11px] text-slate-400">{label}</p>
+          <p className="text-sm font-semibold mt-0.5">{value}</p>
+        </div>
       );
     }
 
     function DashboardBody() {
-      const { filters, refreshNonce, theme } = useContext(DashboardContext);
+      const { filters, refreshNonce, selectedKpi, setSelectedKpi } = useContext(DashboardContext);
       const [loading, setLoading] = useState(false);
       const [errors, setErrors] = useState({ line: false, bar: false, table: false });
 
@@ -188,10 +279,10 @@
         const prevGrowth = previous.length > 1 ? ((previous.at(-1).revenue - previous[0].revenue) / previous[0].revenue) * 100 : growth;
 
         return {
-          revenue: { value: formatCurrency(sumRevenue), delta: ((sumRevenue - prevRevenue) / prevRevenue) * 100, spark: filtered.slice(-20).map(x=>x.revenue) },
-          users: { value: formatCompact(sumUsers), delta: ((sumUsers - prevUsers) / prevUsers) * 100, spark: filtered.slice(-20).map(x=>x.users) },
-          conversion: { value: `${avgConv.toFixed(2)}%`, delta: ((avgConv - prevConv) / prevConv) * 100, spark: filtered.slice(-20).map(x=>x.conversion) },
-          growth: { value: `${growth >= 0 ? '+' : ''}${growth.toFixed(1)}%`, delta: growth - prevGrowth, spark: filtered.slice(-20).map((x,i,arr)=> i===0?0:((x.revenue-arr[i-1].revenue)/arr[i-1].revenue)*100) }
+          revenue: { label: 'Revenue', value: formatCurrency(sumRevenue), delta: ((sumRevenue - prevRevenue) / prevRevenue) * 100, spark: filtered.slice(-20).map(x=>x.revenue) },
+          users: { label: 'Users', value: formatCompact(sumUsers), delta: ((sumUsers - prevUsers) / prevUsers) * 100, spark: filtered.slice(-20).map(x=>x.users) },
+          conversion: { label: 'Conversion', value: `${avgConv.toFixed(2)}%`, delta: ((avgConv - prevConv) / prevConv) * 100, spark: filtered.slice(-20).map(x=>x.conversion) },
+          growth: { label: 'Growth', value: `${growth >= 0 ? '+' : ''}${growth.toFixed(1)}%`, delta: growth - prevGrowth, spark: filtered.slice(-20).map((x,i,arr)=> i===0?0:((x.revenue-arr[i-1].revenue)/arr[i-1].revenue)*100) }
         };
       }, [filtered, previous]);
 
@@ -222,10 +313,10 @@
       return (
         <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-5 md:space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-            <KpiCard label="Revenue" value={kpis.revenue.value} delta={kpis.revenue.delta} comparison="vs prev period" spark={kpis.revenue.spark} />
-            <KpiCard label="Users" value={kpis.users.value} delta={kpis.users.delta} comparison="vs prev period" spark={kpis.users.spark} />
-            <KpiCard label="Conversion" value={kpis.conversion.value} delta={kpis.conversion.delta} comparison="vs prev period" spark={kpis.conversion.spark} />
-            <KpiCard label="Growth" value={kpis.growth.value} delta={kpis.growth.delta} comparison="vs prev period" spark={kpis.growth.spark} />
+            <KpiCard label="Revenue" value={kpis.revenue.value} delta={kpis.revenue.delta} comparison="vs prev" spark={kpis.revenue.spark} tone="primary" onClick={() => setSelectedKpi(kpis.revenue)} />
+            <KpiCard label="Users" value={kpis.users.value} delta={kpis.users.delta} comparison="vs prev" spark={kpis.users.spark} onClick={() => setSelectedKpi(kpis.users)} />
+            <KpiCard label="Conversion" value={kpis.conversion.value} delta={kpis.conversion.delta} comparison="vs prev" spark={kpis.conversion.spark} tone="success" onClick={() => setSelectedKpi(kpis.conversion)} />
+            <KpiCard label="Growth" value={kpis.growth.value} delta={kpis.growth.delta} comparison="vs prev" spark={kpis.growth.spark} tone="warn" onClick={() => setSelectedKpi(kpis.growth)} />
           </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
@@ -244,7 +335,11 @@
                       <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                       <XAxis dataKey="label" minTickGap={24} tick={{ fill: '#94a3b8', fontSize: 11 }} />
                       <YAxis tick={{ fill: '#94a3b8', fontSize: 11 }} tickFormatter={(v)=>`$${Math.round(v/1000)}k`} />
-                      <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '10px' }} formatter={(v)=>formatCurrency(v)} />
+                      <Tooltip
+                        contentStyle={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '10px' }}
+                        formatter={(v)=>formatCurrency(v)}
+                        labelStyle={{ color: '#cbd5e1' }}
+                      />
                       <Line type="monotone" dataKey="revenue" stroke="#818cf8" strokeWidth={3} dot={false} activeDot={{ r: 5 }} />
                     </LineChart>
                   </ResponsiveContainer>
@@ -255,7 +350,7 @@
             <div className="xl:col-span-4">
               <Widget
                 title="Users & Conversion"
-                subtitle="Period average by bucket"
+                subtitle="Average by period bucket"
                 loading={loading}
                 error={errors.bar}
                 onRefresh={() => setLoading(true) || setTimeout(()=>setLoading(false), 500)}
@@ -295,21 +390,38 @@
                     <th className="py-2">Revenue</th>
                     <th className="py-2">Users</th>
                     <th className="py-2">Growth</th>
+                    <th className="py-2">Status</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {topRows.map((r) => (
-                    <tr key={r.product} className="border-b border-slate-800/80 hover:bg-slate-700/20">
-                      <td className="py-2.5 font-medium">{r.product}</td>
-                      <td className="py-2.5">{formatCurrency(r.revenue)}</td>
-                      <td className="py-2.5">{formatCompact(r.users)}</td>
-                      <td className={`py-2.5 ${r.growth >= 0 ? 'text-emerald-300' : 'text-rose-300'}`}>{r.growth >= 0 ? '+' : ''}{r.growth.toFixed(1)}%</td>
-                    </tr>
-                  ))}
+                  {topRows.map((r) => {
+                    const status = r.growth > 8 ? 'Outperform' : r.growth >= 0 ? 'Stable' : 'Declining';
+                    const statusClass = r.growth > 8
+                      ? 'bg-emerald-500/15 text-emerald-300'
+                      : r.growth >= 0 ? 'bg-amber-500/15 text-amber-300' : 'bg-rose-500/15 text-rose-300';
+                    return (
+                      <tr key={r.product} className="border-b border-slate-800/80 hover:bg-slate-700/20 transition-colors">
+                        <td className="py-2.5 font-medium">{r.product}</td>
+                        <td className="py-2.5">{formatCurrency(r.revenue)}</td>
+                        <td className="py-2.5">{formatCompact(r.users)}</td>
+                        <td className={`py-2.5 ${r.growth >= 0 ? 'text-emerald-300' : 'text-rose-300'}`}>{r.growth >= 0 ? '+' : ''}{r.growth.toFixed(1)}%</td>
+                        <td className="py-2.5"><span className={`text-xs px-2 py-1 rounded-full ${statusClass}`}>{status}</span></td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
           </Widget>
+
+          {selectedKpi ? (
+            <div className="glass rounded-2xl p-4 md:p-5 fade-up">
+              <p className="text-xs text-slate-400">KPI Drill-down</p>
+              <p className="mt-1 text-lg font-semibold">{selectedKpi.label}</p>
+              <p className="text-sm text-slate-300 mt-1">Current value: <span className="font-semibold">{selectedKpi.value}</span></p>
+              <p className="text-sm text-slate-400 mt-1">This is a placeholder drill-down panel (staff-level interaction pattern).</p>
+            </div>
+          ) : null}
         </div>
       );
     }
@@ -318,6 +430,7 @@
       const [filters, setFilters] = useState({ range: '30', category: 'All' });
       const [refreshNonce, setRefreshNonce] = useState(0);
       const [theme, setTheme] = useState('dark');
+      const [selectedKpi, setSelectedKpi] = useState(null);
 
       useEffect(() => {
         document.documentElement.classList.toggle('dark', theme === 'dark');
@@ -328,19 +441,29 @@
       }
 
       return (
-        <DashboardContext.Provider value={{ filters, setFilters, refreshNonce, theme }}>
+        <DashboardContext.Provider value={{ filters, setFilters, refreshNonce, theme, selectedKpi, setSelectedKpi }}>
           <div className="max-w-7xl mx-auto p-4 md:p-8">
             <header className="glass rounded-2xl p-5 md:p-6">
               <div className="flex flex-col xl:flex-row gap-4 xl:items-center xl:justify-between">
                 <div>
                   <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Antigravity Dashboard</h1>
-                  <p className="text-slate-400 mt-1">Fixed-layout executive dashboard with coordinated global filters.</p>
+                  <p className="text-slate-400 mt-1">Executive command center with coordinated filters and widget states.</p>
+                  <div className="mt-3 flex gap-2 flex-wrap">
+                    <MetricPill label="Region" value="Global" />
+                    <MetricPill label="Latency" value="128ms" />
+                    <MetricPill label="Last sync" value="just now" />
+                  </div>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
-                  <div className="glass rounded-xl px-3 py-2">
+                  <div className="glass rounded-xl px-3 py-2 border border-slate-600/60">
                     <label className="text-xs text-slate-400 mr-2">Date range</label>
-                    <select value={filters.range} onChange={(e)=>setFilters(f=>({ ...f, range: e.target.value }))} className="bg-transparent text-sm outline-none">
+                    <select
+                      value={filters.range}
+                      onChange={(e)=>setFilters(f=>({ ...f, range: e.target.value }))}
+                      className="focus-ring bg-transparent text-sm outline-none rounded"
+                      aria-label="Date range"
+                    >
                       <option className="text-black" value="7">Last 7 days</option>
                       <option className="text-black" value="30">Last 30 days</option>
                       <option className="text-black" value="90">Last 90 days</option>
@@ -348,9 +471,14 @@
                     </select>
                   </div>
 
-                  <div className="glass rounded-xl px-3 py-2">
+                  <div className="glass rounded-xl px-3 py-2 border border-slate-600/60">
                     <label className="text-xs text-slate-400 mr-2">Category</label>
-                    <select value={filters.category} onChange={(e)=>setFilters(f=>({ ...f, category: e.target.value }))} className="bg-transparent text-sm outline-none">
+                    <select
+                      value={filters.category}
+                      onChange={(e)=>setFilters(f=>({ ...f, category: e.target.value }))}
+                      className="focus-ring bg-transparent text-sm outline-none rounded"
+                      aria-label="Category"
+                    >
                       <option className="text-black" value="All">All</option>
                       <option className="text-black" value="Enterprise">Enterprise</option>
                       <option className="text-black" value="SMB">SMB</option>
@@ -358,9 +486,9 @@
                     </select>
                   </div>
 
-                  <button onClick={() => setRefreshNonce(n => n + 1)} className="text-sm px-3 py-2 rounded-xl border border-slate-600 hover:bg-slate-700/40">Refresh</button>
-                  <button className="text-sm px-3 py-2 rounded-xl border border-slate-600 hover:bg-slate-700/40">Export</button>
-                  <button onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} className="text-sm px-3 py-2 rounded-xl border border-slate-600 hover:bg-slate-700/40">Theme</button>
+                  <button onClick={() => setRefreshNonce(n => n + 1)} className="focus-ring text-sm px-3 py-2 rounded-xl border border-slate-600 hover:bg-slate-700/40">Refresh</button>
+                  <button className="focus-ring text-sm px-3 py-2 rounded-xl border border-slate-600 hover:bg-slate-700/40">Export</button>
+                  <button onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} className="focus-ring text-sm px-3 py-2 rounded-xl border border-slate-600 hover:bg-slate-700/40">Theme</button>
                 </div>
               </div>
             </header>
