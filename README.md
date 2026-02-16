@@ -7,11 +7,14 @@ A high-performance, single-file React dashboard built for speed and aesthetics. 
 
 ## 📋 Overview
 
-The **Antigravity Dashboard** is a standalone business intelligence interface featuring:
-- **Dark Mode Glassmorphism UI**: Modern, clean, and accessible.
-- **Real-time Responsive Charts**: Powered by Recharts.
-- **Interactive KPI Cards**: Trend indicators and dynamic styling.
-- **Zero Dependencies**: Runs directly in the browser via CDN.
+The **Antigravity Command Center** is a professional-grade business intelligence interface designed for high-density data visualization and system monitoring. 
+
+### Key Capabilities:
+- **Enterprise Shell**: Fully-responsive layout with sidebar navigation, global search, and command-palette design patterns.
+- **Advanced Metrics**: KPI cards featuring high-precision trend analysis, comparison deltas, and visual health indicators.
+- **System Monitoring**: Integrated real-time alert feed for infrastructure health tracking.
+- **Strategic Tables**: Data-dense grids with performance scoring, status management, and growth tracking.
+- **Modern Tech Stack**: React 18 (Functional Components), Tailwind CSS (Enterprise spacing/colors), and Recharts (Optimized visualizations).
 
 ## 🛠️ Quick Start
 
@@ -71,9 +74,9 @@ tailwind.config = {
 ## 📝 Troubleshooting
 
 **"The screen is blank!"**
-- Open your browser console (F12 or Right Click > Inspect > Console).
-- Ensure you have an active internet connection (required to load React/Tailwind from CDNs).
-- If you see CORS errors, use **Option 2** (Local Server) above.
+- **Local Server Requirement**: Many modern browsers block the Babel Standalone transformer when loading via the `file://` protocol. Use **Option 2** (Local Server) to ensure all components load correctly.
+- **Console Errors**: Open DevTools (F12) to check for failed CDN loads or syntax errors.
+- **Internet Connection**: An active connection is required to fetch React, Tailwind, and Recharts from unpkg/cdn.
 
 ---
 *Built with ❤️ by Antigravity*

@@ -19,6 +19,12 @@
     <script crossorigin src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
 
     <script>
+        // Protocol check for local file system
+        if (window.location.protocol === 'file:') {
+            console.warn('Antigravity Dashboard: Performance and features may be limited when running via file:// protocol. Local server recommended.');
+        }
+    </script>
+    <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
@@ -108,11 +114,52 @@
 
     <script type="text/babel">
         const { useState, useEffect, useMemo, useCallback } = React;
+        const RechartsLib = window.Recharts || {};
         const { 
             LineChart, Line, AreaChart, Area, BarChart, Bar, 
             XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-            Cell, PieChart, Pie, Legend
-        } = Recharts;
+            Cell, PieChart, Pie, Legend, Sector
+        } = RechartsLib;
+
+        // --- Sophisticated UI Components ---
+
+        const ActiveShape = (props) => {
+            const RADIAN = Math.PI / 180;
+            const { cx, cy, midAngle, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value } = props;
+            const sin = Math.sin(-RADIAN * midAngle);
+            const cos = Math.cos(-RADIAN * midAngle);
+            const sx = cx + (outerRadius + 10) * cos;
+            const sy = cy + (outerRadius + 10) * sin;
+            const mx = cx + (outerRadius + 30) * cos;
+            const my = cy + (outerRadius + 30) * sin;
+            const ex = sx + (cos >= 0 ? 1 : -1) * 22;
+            const ey = sy;
+            const textAnchor = cos >= 0 ? 'start' : 'end';
+
+            return (
+                <g>
+                    <text x={cx} y={cy} dy={8} textAnchor="middle" fill={fill} className="text-lg font-bold font-sans tracking-tight">{payload.name}</text>
+                    <Sector
+                        cx={cx}
+                        cy={cy}
+                        innerRadius={innerRadius}
+                        outerRadius={outerRadius}
+                        startAngle={startAngle}
+                        endAngle={endAngle}
+                        fill={fill}
+                    />
+                    <Sector
+                        cx={cx}
+                        cy={cy}
+                        startAngle={startAngle}
+                        endAngle={endAngle}
+                        innerRadius={outerRadius + 6}
+                        outerRadius={outerRadius + 10}
+                        fill={fill}
+                    />
+                </g>
+            );
+        };
 
         // --- Standard UI Components ---
 
@@ -337,31 +384,77 @@
 
         const ActivityFeed = ({ delay = 0 }) => (
             <div className="widget-card rounded-2xl animate-in" style={{ animationDelay: `${delay}ms` }}>
-                <div className="p-5 border-b border-slate-800">
+                <div className="p-5 border-b border-slate-800 flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-slate-200">System Monitoring</h3>
+                    <div className="flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Live</span>
+                    </div>
                 </div>
                 <div className="p-5 space-y-6">
                     {RECENT_ALERTS.map(alert => (
-                        <div key={alert.id} className="flex gap-4">
-                            <div className={`mt-1 w-2 h-2 rounded-full shrink-0 ${
+                        <div key={alert.id} className="flex gap-4 group">
+                            <div className={`mt-1 w-2 h-2 rounded-full shrink-0 transition-all group-hover:scale-125 ${
                                 alert.type === 'danger' ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]' :
                                 alert.type === 'warning' ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]' : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]'
                             }`}></div>
                             <div className="flex-1 space-y-1">
                                 <div className="flex justify-between items-center">
-                                    <p className="text-xs font-semibold text-slate-200">{alert.title}</p>
+                                    <p className="text-xs font-semibold text-slate-200 group-hover:text-indigo-400 transition-colors">{alert.title}</p>
                                     <span className="text-[10px] text-slate-500 font-mono">{alert.time}</span>
                                 </div>
                                 <p className="text-[11px] text-slate-400 leading-relaxed">{alert.body}</p>
                             </div>
                         </div>
                     ))}
-                    <button className="w-full py-2 bg-slate-900 border border-slate-800 rounded-lg text-[10px] font-bold text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-all">
-                        VIEW SYSTEM LOGS
+                    <button className="w-full py-2 bg-slate-900 border border-slate-800 rounded-lg text-[10px] font-bold text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-all tracking-widest">
+                        OPEN CLUSTER CONSOLE
                     </button>
                 </div>
             </div>
         );
+
+        const MarketShareChart = ({ delay = 0 }) => {
+            const [activeIndex, setActiveIndex] = useState(0);
+            const data = [
+                { name: 'Direct', value: 400, color: '#6366f1' },
+                { name: 'Social', value: 300, color: '#a78bfa' },
+                { name: 'Referral', value: 300, color: '#f472b6' },
+                { name: 'Search', value: 200, color: '#fbbf24' },
+            ];
+
+            const onPieEnter = (_, index) => setActiveIndex(index);
+
+            return (
+                <div className="widget-card rounded-2xl animate-in flex flex-col" style={{ animationDelay: `${delay}ms` }}>
+                    <div className="p-5 border-b border-slate-800">
+                        <h3 className="text-sm font-semibold text-slate-200">Traffic Distribution</h3>
+                    </div>
+                    <div className="p-5 flex-1 min-h-[300px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie
+                                    activeIndex={activeIndex}
+                                    activeShape={ActiveShape}
+                                    data={data}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={60}
+                                    outerRadius={80}
+                                    fill="#8884d8"
+                                    dataKey="value"
+                                    onMouseEnter={onPieEnter}
+                                >
+                                    {data.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={entry.color} />
+                                    ))}
+                                </Pie>
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            );
+        };
 
         const ProductGrid = ({ delay = 0 }) => (
             <div className="widget-card rounded-2xl animate-in overflow-hidden" style={{ animationDelay: `${delay}ms` }}>
@@ -459,9 +552,9 @@
                     </div>
 
                     {/* Tables & Deep Dive */}
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pb-12">
                         <ProductGrid delay={400} className="lg:col-span-9" />
-                        <ChartWidget title="Product Share" type="bar" delay={450} className="lg:col-span-3" />
+                        <MarketShareChart delay={450} className="lg:col-span-3" />
                     </div>
                 </div>
             );
